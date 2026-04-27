@@ -4,19 +4,22 @@
 
 ## 功能特性
 
-### 📱 核心功能
+### 核心功能
 - **首页**: 今日灵感穿搭推荐、天气信息、快捷搭配助手
+- **衣橱**: 衣物管理、分类浏览、毛玻璃卡片展示
 - **录入**: 拍照/相册添加衣物、智能识别确认、闲置管理
-- **我的**: 衣橱管理、闲置追踪、穿搭日志
+- **我的**: 个人中心、主题设置、穿搭日志
 
-### 🎯 主要特点
-- ✨ Material Design 3 现代化界面
-- 📸 相机拍照与相册选择
-- 🗄️ SQLite 本地数据持久化
-- 📊 月视图穿搭日历
-- 🏷️ 智能标签分类
-- 🔄 闲置衣物管理（左滑唤醒）
-- 💡 智能搭配建议
+### 主要特点
+- 五组主题配色（晨间燕麦、海盐薄荷、摩卡拿铁、薰衣草灰、极简石墨）
+- 深色模式支持
+- 现代化拍照界面（V2.0）- 全屏预览、闪光灯切换、对焦动画
+- 毛玻璃 UI 组件
+- Material Design 3 现代化界面
+- 相机拍照与相册选择
+- SQLite 本地数据持久化
+- 月视图穿搭日历
+- 智能标签分类
 
 ## 技术栈
 
@@ -25,29 +28,33 @@
 - **数据库**: SQLite (sqflite)
 - **图片处理**: image_picker, camera
 - **UI组件**: table_calendar, flutter_staggered_grid_view
-- **通知**: flutter_local_notifications
 
 ## 项目结构
 
 ```
 lib/
-├── models/              # 数据模型
+├── models/                   # 数据模型
 │   ├── clothing_item.dart
 │   ├── outfit.dart
 │   └── outfit_log.dart
-├── providers/           # 状态管理
-│   └── clothing_provider.dart
-├── screens/             # 页面
+├── providers/               # 状态管理
+│   ├── clothing_provider.dart
+│   └── theme_provider.dart  # 主题配色管理
+├── screens/                 # 页面
 │   ├── home_screen.dart
-│   ├── capture_screen.dart
+│   ├── capture_screen.dart  # 拍照界面 V2.0
+│   ├── photo_confirm_screen.dart
 │   ├── recognition_confirm_page.dart
-│   ├── profile_screen.dart
+│   ├── theme_color_screen.dart
 │   ├── wardrobe_tab.dart
-│   ├── idle_tab.dart
-│   └── outfit_log_tab.dart
-├── services/            # 服务层
+│   ├── profile_screen.dart
+│   └── settings_page.dart
+├── widgets/                 # 自定义组件
+│   ├── glass_card.dart      # 毛玻璃卡片
+│   └── glass_button.dart   # 毛玻璃按钮
+├── services/
 │   └── database_helper.dart
-└── main.dart            # 应用入口
+└── main.dart
 ```
 
 ## 快速开始
@@ -55,7 +62,6 @@ lib/
 ### 环境要求
 - Flutter SDK >= 3.11.5
 - Dart SDK >= 3.11.5
-- Android Studio / VS Code
 - Android minSdk: 21
 
 ### 安装依赖
@@ -73,38 +79,23 @@ flutter run
 flutter build apk --release
 ```
 
-生成的APK位于: `build/app/outputs/flutter-apk/app-release.apk`
+## 更新日志
 
-## 开发计划
+### v1.0.1 (2026-04-27)
+- 新增五组主题配色切换
+- 新增深色模式支持
+- 重构现代化拍照界面（V2.0）
+- 新增毛玻璃 UI 组件
+- 全局毛玻璃底部导航
+- 修复代码问题
 
-### 第一版（已完成）✅
-- [x] 项目基础架构
-- [x] 底部导航与三个主页面
-- [x] 首页完整布局
-- [x] 录入页相机功能骨架
-- [x] 识别确认页表单
-- [x] 我的页面整体结构
-- [x] 数据模型与数据库
-
-### 后续迭代 🚧
-- [ ] 相机功能完善（需要配置权限）
-- [ ] AI图像识别集成
-- [ ] 天气API接入
-- [ ] 推送通知功能
-- [ ] 数据导出备份
-- [ ] iOS适配
-- [ ] 鸿蒙系统支持
-
-## 注意事项
-
-1. **相机功能**: 需要在AndroidManifest.xml中添加相机权限
-2. **存储权限**: 访问相册需要存储权限
-3. **通知权限**: 推送通知需要相应权限配置
+### v1.0 (初始版本)
+- 项目基础架构
+- 底部导航与四个主页面
+- 相机拍照与相册选择
+- 识别确认页表单
+- 数据模型与数据库
 
 ## 许可证
 
 本项目仅供学习使用。
-
-## 联系方式
-
-如有问题或建议，欢迎反馈！
