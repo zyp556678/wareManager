@@ -119,7 +119,7 @@ class _EditClothingPageState extends State<EditClothingPage> {
                     color: colorScheme.surfaceContainerHighest,
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
-                      color: colorScheme.primary.withOpacity(0.3),
+                      color: colorScheme.primary.withValues(alpha: 0.3),
                       width: 2,
                     ),
                   ),
@@ -242,7 +242,7 @@ class _EditClothingPageState extends State<EditClothingPage> {
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w500,
-            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
           ),
         ),
         const SizedBox(height: 8),
@@ -277,7 +277,7 @@ class _EditClothingPageState extends State<EditClothingPage> {
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w500,
-            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
           ),
         ),
         const SizedBox(height: 8),
@@ -285,7 +285,7 @@ class _EditClothingPageState extends State<EditClothingPage> {
           padding: const EdgeInsets.symmetric(horizontal: 16),
           decoration: BoxDecoration(
             border: Border.all(
-              color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+              color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
             ),
             borderRadius: BorderRadius.circular(12),
           ),
@@ -333,8 +333,10 @@ class _EditClothingPageState extends State<EditClothingPage> {
 
     if (confirmed == true && mounted) {
       await context.read<ClothingProvider>().deleteClothingItem(widget.item.id!);
-      Navigator.pop(context);
-      Navigator.pop(context); // 返回到列表页
+      if (mounted) {
+        Navigator.pop(context);
+        Navigator.pop(context);
+      }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('已删除')),

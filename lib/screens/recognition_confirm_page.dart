@@ -183,7 +183,11 @@ class _RecognitionConfirmPageState extends State<RecognitionConfirmPage> {
 
     if (mounted) {
       await context.read<ClothingProvider>().addClothingItem(clothingItem);
+    }
+    if (mounted) {
       Navigator.popUntil(context, (route) => route.isFirst);
+    }
+    if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('已收入衣橱')),
       );
@@ -353,7 +357,7 @@ class _RecognitionConfirmPageState extends State<RecognitionConfirmPage> {
           color: Theme.of(context).scaffoldBackgroundColor,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha: 0.1),
               blurRadius: 4,
               offset: const Offset(0, -2),
             ),

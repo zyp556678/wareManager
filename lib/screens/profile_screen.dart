@@ -39,7 +39,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         });
       }
     } catch (e) {
-      print('Error loading user profile: $e');
+      debugPrint('Error loading user profile: $e');
       // 使用默认值
       if (mounted) {
         setState(() {
@@ -95,7 +95,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   borderRadius: BorderRadius.circular(24),
                   boxShadow: [
                     BoxShadow(
-                      color: colorScheme.primary.withOpacity(0.3),
+                      color: colorScheme.primary.withValues(alpha: 0.3),
                       blurRadius: 20,
                       offset: const Offset(0, 10),
                     ),
@@ -110,7 +110,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             Container(
                               padding: const EdgeInsets.all(3),
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.3),
+color: Colors.white.withValues(alpha: 0.3),
                                 shape: BoxShape.circle,
                               ),
                               child: CircleAvatar(
@@ -179,7 +179,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   ),
                                   Icon(
                                     Icons.chevron_right,
-                                    color: Colors.white.withOpacity(0.7),
+                                    color: Colors.white.withValues(alpha: 0.7),
                                     size: 20,
                                   ),
                                 ],
@@ -193,7 +193,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     Container(
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
+                        color: Colors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Row(
@@ -207,7 +207,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           Container(
                             width: 1,
                             height: 40,
-                            color: Colors.white.withOpacity(0.3),
+                            color: Colors.white.withValues(alpha: 0.3),
                           ),
                           _buildModernStatItem(
                             context.watch<ClothingProvider>().idleClothing.length.toString(),
@@ -310,7 +310,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
             const SizedBox(width: 8),
-            Icon(icon, color: Colors.white.withOpacity(0.8), size: 20),
+            Icon(icon, color: Colors.white.withValues(alpha: 0.8), size: 20),
           ],
         ),
         const SizedBox(height: 4),
@@ -354,7 +354,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
       trailing: Icon(
         Icons.chevron_right,
-        color: colorScheme.onSurface.withOpacity(0.4),
+        color: colorScheme.onSurface.withValues(alpha: 0.4),
         size: 20,
       ),
       onTap: onTap,

@@ -26,7 +26,7 @@ class ClothingProvider with ChangeNotifier {
     try {
       _clothingItems = await _dbHelper.getAllClothingItems();
     } catch (e) {
-      print('Error loading clothing items: $e');
+      debugPrint('Error loading clothing items: $e');
     }
 
     _isLoading = false;
@@ -41,7 +41,7 @@ class ClothingProvider with ChangeNotifier {
       _clothingItems.insert(0, newItem);
       notifyListeners();
     } catch (e) {
-      print('Error adding clothing item: $e');
+      debugPrint('Error adding clothing item: $e');
     }
   }
 
@@ -55,7 +55,7 @@ class ClothingProvider with ChangeNotifier {
         notifyListeners();
       }
     } catch (e) {
-      print('Error updating clothing item: $e');
+      debugPrint('Error updating clothing item: $e');
     }
   }
 
@@ -66,7 +66,7 @@ class ClothingProvider with ChangeNotifier {
       _clothingItems.removeWhere((item) => item.id == id);
       notifyListeners();
     } catch (e) {
-      print('Error deleting clothing item: $e');
+      debugPrint('Error deleting clothing item: $e');
     }
   }
 
@@ -80,15 +80,15 @@ class ClothingProvider with ChangeNotifier {
   // 设置衣物为闲置
   Future<void> setIdle(int id, DateTime until, String location) async {
     try {
-      print('DEBUG: Setting item $id as idle');
+      debugPrint('DEBUG: Setting item $id as idle');
       final index = _clothingItems.indexWhere((c) => c.id == id);
       if (index == -1) {
-        print('Error: Clothing item with id $id not found');
+        debugPrint('Error: Clothing item with id $id not found');
         return;
       }
       
       final item = _clothingItems[index];
-      print('DEBUG: Found item: ${item.category}, current status: ${item.status}');
+      debugPrint('DEBUG: Found item: ${item.category}, current status: ${item.status}');
       
       final updatedItem = item.copyWith(
         status: 'idle',
@@ -96,15 +96,15 @@ class ClothingProvider with ChangeNotifier {
         storageLocation: location,
       );
       
-      print('DEBUG: Updated item status to: ${updatedItem.status}');
+      debugPrint('DEBUG: Updated item status to: ${updatedItem.status}');
       await updateClothingItem(updatedItem);
-      print('DEBUG: Successfully updated item in database');
+      debugPrint('DEBUG: Successfully updated item in database');
       
       // 强制刷新列表
       await loadClothingItems();
-      print('DEBUG: Reloaded clothing items list');
+      debugPrint('DEBUG: Reloaded clothing items list');
     } catch (e) {
-      print('Error setting item as idle: $e');
+      debugPrint('Error setting item as idle: $e');
     }
   }
 

@@ -28,7 +28,7 @@ class _LocationManagementPageState extends State<LocationManagementPage> {
         _isLoading = false;
       });
     } catch (e) {
-      print('Error loading locations: $e');
+      debugPrint('Error loading locations: $e');
       setState(() => _isLoading = false);
     }
   }
@@ -109,7 +109,11 @@ class _LocationManagementPageState extends State<LocationManagementPage> {
                 await DatabaseHelper.instance.createLocation(location);
                 if (mounted) {
                   Navigator.pop(context);
+                }
+                if (mounted) {
                   _loadLocations();
+                }
+                if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('地点添加成功')),
                   );
@@ -193,7 +197,11 @@ class _LocationManagementPageState extends State<LocationManagementPage> {
                 await DatabaseHelper.instance.updateLocation(updatedLocation);
                 if (mounted) {
                   Navigator.pop(context);
+                }
+                if (mounted) {
                   _loadLocations();
+                }
+                if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('地点更新成功')),
                   );
@@ -317,7 +325,7 @@ class _LocationManagementPageState extends State<LocationManagementPage> {
                       child: ListTile(
                         leading: CircleAvatar(
                           backgroundColor:
-                              _getTypeColor(location.type).withOpacity(0.2),
+                              _getTypeColor(location.type).withValues(alpha: 0.2),
                           child: Icon(
                             _getTypeIcon(location.type),
                             color: _getTypeColor(location.type),

@@ -19,7 +19,7 @@ class _WardrobeTabState extends State<WardrobeTab> {
   final List<String> _categories = ['全部', '上衣', '裤子', '裙装', '外套', '鞋子', '配饰'];
 
   void _showItemMenu(BuildContext context, ClothingItem item) {
-    print('DEBUG: Showing menu for item ${item.id}: ${item.category}');
+    debugPrint('DEBUG: Showing menu for item ${item.id}: ${item.category}');
     showModalBottomSheet(
       context: context,
       builder: (context) => Column(
@@ -29,7 +29,7 @@ class _WardrobeTabState extends State<WardrobeTab> {
             leading: const Icon(Icons.pause_circle_outline),
             title: const Text('设为闲置'),
             onTap: () {
-              print('DEBUG: User tapped "Set as idle"');
+              debugPrint('DEBUG: User tapped "Set as idle"');
               Navigator.pop(context);
               _setAsIdle(item);
             },
@@ -71,7 +71,7 @@ class _WardrobeTabState extends State<WardrobeTab> {
   }
 
   Future<void> _setAsIdle(ClothingItem item) async {
-    print('DEBUG: _setAsIdle called for item ${item.id}');
+    debugPrint('DEBUG: _setAsIdle called for item ${item.id}');
     final date = await showDatePicker(
       context: context,
       initialDate: DateTime.now().add(const Duration(days: 30)),
@@ -79,7 +79,7 @@ class _WardrobeTabState extends State<WardrobeTab> {
       lastDate: DateTime.now().add(const Duration(days: 365)),
     );
 
-    print('DEBUG: Date picker result: $date');
+    debugPrint('DEBUG: Date picker result: $date');
     if (date != null && mounted) {
       await context.read<ClothingProvider>().setIdle(
             item.id!,

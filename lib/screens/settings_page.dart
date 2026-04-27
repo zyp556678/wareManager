@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:path_provider/path_provider.dart';
 import '../providers/theme_provider.dart';
 import 'theme_color_screen.dart';
+import 'version_info_screen.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -246,7 +247,22 @@ class _SettingsPageState extends State<SettingsPage> {
                 ListTile(
                   leading: const Icon(Icons.info_outline),
                   title: const Text('版本'),
-                  trailing: const Text('1.0.0'),
+                  trailing: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text('1.0.1+3'),
+                      SizedBox(width: 4),
+                      Icon(Icons.chevron_right, size: 20),
+                    ],
+                  ),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const VersionInfoScreen(),
+                      ),
+                    );
+                  },
                 ),
                 const Divider(height: 1),
                 ListTile(

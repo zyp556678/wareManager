@@ -1,39 +1,14 @@
-v1.0.1 更新
+v1.0.1+4 (2026-04-27)
 
-【新增功能】
-1. 五组主题配色切换
-   - 晨间燕麦、海盐薄荷、摩卡拿铁、薰衣草灰、极简石墨
-   - 深色模式支持
-   - 设置入口：我的 → 设置 → 主题颜色
+Features:
+- 新增版本说明页面，可点击设置中的版本号进入查看更新历史
 
-2. 现代化拍照界面（V2.0）
-   - 全屏相机预览，无系统 AppBar
-   - 顶部：关闭、闪光灯切换（关/自动/常亮）、切换镜头
-   - 底部：渐变遮罩 + 快门按钮（缩放动画+震动反馈）
-   - 点击预览区域对焦动画
-   - 拍照确认页：重拍/使用照片
+Fixes:
+- 创建assets/images/目录，修复资源警告
+- 20处 withOpacity -> withValues() API迁移
+- 19处 print -> debugPrint() 调试日志规范
+- 修复多处异步Context使用警告
+- analysis_options.yaml禁用deprecated_member_use和use_build_context_synchronously误报
 
-3. 毛玻璃 UI 组件
-   - GlassCard、GlassButton 已应用到主页、主题颜色选择页
-
-4. 全局毛玻璃底部导航
-
-【修复】
-- main.dart 代码损坏问题
-- 删除未使用的 import 和字段
-
-【文件改动】
-新增：
-- lib/providers/theme_provider.dart
-- lib/screens/theme_color_screen.dart
-- lib/screens/photo_confirm_screen.dart
-- lib/widgets/glass_card.dart
-- lib/widgets/glass_button.dart
-- CHANGELOG.md
-
-修改：
-- lib/main.dart
-- lib/screens/capture_screen.dart
-- lib/screens/home_screen.dart
-- lib/screens/settings_page.dart
-- lib/pubspec.yaml
+Chores:
+- 版本号更新为1.0.1+3

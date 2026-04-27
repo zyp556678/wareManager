@@ -1,5 +1,6 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
+import 'package:flutter/foundation.dart';
 import '../models/clothing_item.dart';
 import '../models/outfit.dart';
 import '../models/outfit_log.dart';
@@ -121,14 +122,14 @@ class DatabaseHelper {
 
   Future<int> updateClothingItem(ClothingItem item) async {
     final db = await database;
-    print('DEBUG DB: Updating item ${item.id} with status: ${item.status}');
+    debugPrint('DEBUG DB: Updating item ${item.id} with status: ${item.status}');
     final result = await db.update(
       'clothing_items',
       item.toMap(),
       where: 'id = ?',
       whereArgs: [item.id],
     );
-    print('DEBUG DB: Update result: $result rows affected');
+    debugPrint('DEBUG DB: Update result: $result rows affected');
     return result;
   }
 
