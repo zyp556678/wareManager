@@ -241,7 +241,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   trailing: const Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text('1.0.1+3'),
+                      Text('1.0.1+4'),
                       SizedBox(width: 4),
                       Icon(Icons.chevron_right, size: 20),
                     ],

@@ -7,7 +7,23 @@ class VersionInfoScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final versions = [
       {
-        'version': '1.0.1',
+        'version': '1.0.1+4',
+        'date': '2026-04-27',
+        'content': [
+          '新增五组主题配色（晨间燕麦、海盐薄荷、摩卡拿铁、薰衣草灰、极简石墨）',
+          '新增主题配色选择页面，带实时预览效果',
+          '新增深色模式支持（浅色/深色/跟随系统三档）',
+          '新增操作日志功能，记录所有衣物操作',
+          '新增毛玻璃 UI 组件（GlassCard/GlassButton）',
+          '新增照片确认页面',
+          '导航栏升级为 Material 3 NavigationBar',
+          '地点管理支持 GPS 定位',
+          '衣橱Tab 支持品类筛选',
+          '闲置Tab 支持左滑唤醒',
+        ],
+      },
+      {
+        'version': '1.0.1+3',
         'date': '2026-04-27',
         'content': [
           '新增五组主题配色切换',

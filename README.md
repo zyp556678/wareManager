@@ -5,21 +5,22 @@
 ## 功能特性
 
 ### 核心功能
-- **首页**: 今日灵感穿搭推荐、天气信息、快捷搭配助手
-- **衣橱**: 衣物管理、分类浏览、毛玻璃卡片展示
+- **首页**: 最近存入、快捷入口、个人信息
+- **衣橱**: 衣物管理、分类浏览、瀑布流展示
+- **闲置**: 闲置衣物管理、左滑唤醒、闲置时长显示
+- **日志**: 操作记录时间线
 - **录入**: 拍照/相册添加衣物、智能识别确认、闲置管理
-- **我的**: 个人中心、主题设置、穿搭日志
+- **我的**: 个人中心、地点管理、主题设置、穿搭日志
 
 ### 主要特点
 - 五组主题配色（晨间燕麦、海盐薄荷、摩卡拿铁、薰衣草灰、极简石墨）
-- 深色模式支持
+- 深色模式支持（浅色/深色/跟随系统三档）
 - 现代化拍照界面（V2.0）- 全屏预览、闪光灯切换、对焦动画
+- Material Design 3 界面
 - 毛玻璃 UI 组件
-- Material Design 3 现代化界面
-- 相机拍照与相册选择
+- GPS 定位与逆地理编码
 - SQLite 本地数据持久化
-- 月视图穿搭日历
-- 智能标签分类
+- 操作日志记录
 
 ## 技术栈
 
@@ -27,34 +28,42 @@
 - **状态管理**: Provider
 - **数据库**: SQLite (sqflite)
 - **图片处理**: image_picker, camera
+- **定位**: geolocator, geocoding
 - **UI组件**: table_calendar, flutter_staggered_grid_view
 
 ## 项目结构
 
 ```
 lib/
-├── models/                   # 数据模型
-│   ├── clothing_item.dart
-│   ├── outfit.dart
-│   └── outfit_log.dart
-├── providers/               # 状态管理
-│   ├── clothing_provider.dart
-│   └── theme_provider.dart  # 主题配色管理
-├── screens/                 # 页面
-│   ├── home_screen.dart
-│   ├── capture_screen.dart  # 拍照界面 V2.0
+├── main.dart                    # 应用入口
+├── models/                      # 数据模型
+│   ├── clothing_item.dart       # 衣物模型
+│   ├── outfit.dart              # 穿搭模型
+│   ├── outfit_log.dart          # 穿搭日志
+│   ├── location.dart            # 存储地点
+│   └── operation_log.dart       # 操作日志
+├── providers/                   # 状态管理
+│   ├── clothing_provider.dart   # 衣物状态
+│   └── theme_provider.dart      # 主题配色
+├── screens/                     # 页面
+│   ├── home_screen.dart        # 首页
+│   ├── wardrobe_screen.dart    # 衣橱（含3个Tab）
+│   ├── capture_screen.dart     # 拍照 V2.0
 │   ├── photo_confirm_screen.dart
 │   ├── recognition_confirm_page.dart
-│   ├── theme_color_screen.dart
-│   ├── wardrobe_tab.dart
-│   ├── profile_screen.dart
-│   └── settings_page.dart
-├── widgets/                 # 自定义组件
-│   ├── glass_card.dart      # 毛玻璃卡片
-│   └── glass_button.dart   # 毛玻璃按钮
+│   ├── clothing_detail_page.dart
+│   ├── edit_clothing_page.dart
+│   ├── profile_screen.dart      # 我的
+│   ├── settings_page.dart       # 设置
+│   ├── theme_color_screen.dart # 主题配色
+│   ├── version_info_screen.dart# 版本说明
+│   ├── location_management_page.dart
+│   └── profile_edit_page.dart
+├── widgets/                     # 自定义组件
+│   ├── glass_card.dart         # 毛玻璃卡片
+│   └── glass_button.dart        # 毛玻璃按钮
 ├── services/
-│   └── database_helper.dart
-└── main.dart
+│   └── database_helper.dart    # 数据库
 ```
 
 ## 快速开始
@@ -79,9 +88,26 @@ flutter run
 flutter build apk --release
 ```
 
+### 静态分析
+```bash
+flutter analyze
+```
+
 ## 更新日志
 
-### v1.0.1 (2026-04-27)
+### v1.0.1+4 (2026-04-27)
+- 新增五组主题配色（晨间燕麦、海盐薄荷、摩卡拿铁、薰衣草灰、极简石墨）
+- 新增主题配色选择页面，带实时预览效果
+- 新增深色模式支持（浅色/深色/跟随系统三档）
+- 新增操作日志功能，记录 add/idle/wakeup/delete/edit 操作
+- 新增毛玻璃 UI 组件（GlassCard/GlassButton）
+- 新增照片确认页面
+- 导航栏升级为 Material 3 NavigationBar
+- 地点管理支持 GPS 定位
+- 衣橱Tab 支持品类筛选（全部/上衣/裤子/裙装/外套/鞋子/配饰）
+- 闲置Tab 支持左滑唤醒 + 闲置时长显示
+
+### v1.0.1+3 (2026-04-27)
 - 新增五组主题配色切换
 - 新增深色模式支持
 - 重构现代化拍照界面（V2.0）
@@ -89,7 +115,7 @@ flutter build apk --release
 - 全局毛玻璃底部导航
 - 修复代码问题
 
-### v1.0 (初始版本)
+### v1.0 (2026-04-27)
 - 项目基础架构
 - 底部导航与四个主页面
 - 相机拍照与相册选择
