@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'dart:io';
 import 'package:path_provider/path_provider.dart';
+import '../providers/theme_provider.dart';
+import 'theme_color_screen.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -11,7 +13,6 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
-  ThemeMode _themeMode = ThemeMode.system;
   bool _idleNotification = true;
 
   @override
@@ -21,19 +22,9 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future<void> _loadSettings() async {
-    // TODO: 从 SharedPreferences 加载设置
     setState(() {
-      _themeMode = ThemeMode.system;
       _idleNotification = true;
     });
-  }
-
-  Future<void> _saveThemeMode(ThemeMode mode) async {
-    setState(() {
-      _themeMode = mode;
-    });
-    // TODO: 保存到 SharedPreferences
-    // 通知应用更新主题
   }
 
   Future<void> _saveIdleNotification(bool value) async {
@@ -118,54 +109,56 @@ class _SettingsPageState extends State<SettingsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('App设置'),
-      ),
+      appBar: AppBar(title: const Text('App设置')),
       body: ListView(
         children: [
-          // 外观设置
-          const Padding(
-            padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
-            child: Text(
-              '外观设置',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
+          _buildSectionHeader('外观设置', colorScheme),
           Card(
             margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             child: Column(
               children: [
-                ListTile(
-                  leading: const Icon(Icons.palette_outlined),
-                  title: const Text('主题模式'),
-                  trailing: DropdownButton<ThemeMode>(
-                    value: _themeMode,
-                    underline: const SizedBox(),
-                    items: const [
-                      DropdownMenuItem(
-                        value: ThemeMode.light,
-                        child: Text('浅色'),
+                Consumer<ThemeProvider>(
+                  builder: (context, themeProvider, _) {
+                    return ListTile(
+                      leading: Icon(Icons.palette_outlined, color: colorScheme.primary),
+                      title: const Text('主题配色'),
+                      subtitle: Text(
+                        ThemeProvider.colorNames[themeProvider.colorIndex],
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: colorScheme.onSurface.withValues(alpha: 0.6),
+                        ),
                       ),
-                      DropdownMenuItem(
-                        value: ThemeMode.dark,
-                        child: Text('深色'),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const ThemeColorScreen()),
+                        );
+                      },
+                    );
+                  },
+                ),
+                const Divider(height: 1),
+                Consumer<ThemeProvider>(
+                  builder: (context, themeProvider, _) {
+                    return ListTile(
+                      leading: Icon(Icons.brightness_6_outlined, color: colorScheme.primary),
+                      title: const Text('深色模式'),
+                      subtitle: Text(
+                        _themeModeLabel(themeProvider.themeMode),
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: colorScheme.onSurface.withValues(alpha: 0.6),
+                        ),
                       ),
-                      DropdownMenuItem(
-                        value: ThemeMode.system,
-                        child: Text('跟随系统'),
-                      ),
-                    ],
-                    onChanged: (value) {
-                      if (value != null) {
-                        _saveThemeMode(value);
-                      }
-                    },
-                  ),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () => _showThemeModePicker(context, themeProvider),
+                    );
+                  },
                 ),
               ],
             ),
@@ -269,6 +262,89 @@ class _SettingsPageState extends State<SettingsPage> {
 
           const SizedBox(height: 16),
         ],
+      ),
+    );
+  }
+
+  void _showThemeModePicker(BuildContext context, ThemeProvider themeProvider) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text(
+                '深色模式',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: colorScheme.onSurface,
+                ),
+              ),
+            ),
+            RadioListTile<ThemeMode>(
+              title: const Text('浅色模式'),
+              value: ThemeMode.light,
+              groupValue: themeProvider.themeMode,
+              activeColor: colorScheme.primary,
+              onChanged: (value) {
+                themeProvider.setThemeMode(value!);
+                Navigator.pop(context);
+              },
+            ),
+            RadioListTile<ThemeMode>(
+              title: const Text('深色模式'),
+              value: ThemeMode.dark,
+              groupValue: themeProvider.themeMode,
+              activeColor: colorScheme.primary,
+              onChanged: (value) {
+                themeProvider.setThemeMode(value!);
+                Navigator.pop(context);
+              },
+            ),
+            RadioListTile<ThemeMode>(
+              title: const Text('跟随系统'),
+              value: ThemeMode.system,
+              groupValue: themeProvider.themeMode,
+              activeColor: colorScheme.primary,
+              onChanged: (value) {
+                themeProvider.setThemeMode(value!);
+                Navigator.pop(context);
+              },
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _themeModeLabel(ThemeMode mode) {
+    switch (mode) {
+      case ThemeMode.light:
+        return '浅色模式';
+      case ThemeMode.dark:
+        return '深色模式';
+      case ThemeMode.system:
+        return '跟随系统';
+    }
+  }
+
+  Widget _buildSectionHeader(String title, ColorScheme colorScheme) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
+      child: Text(
+        title,
+        style: TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w600,
+          color: colorScheme.primary,
+          letterSpacing: 0.5,
+        ),
       ),
     );
   }

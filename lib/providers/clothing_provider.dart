@@ -1,6 +1,5 @@
 import 'package:flutter/foundation.dart';
 import '../models/clothing_item.dart';
-import '../models/outfit.dart';
 import '../services/database_helper.dart';
 
 class ClothingProvider with ChangeNotifier {

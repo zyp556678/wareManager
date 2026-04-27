@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/clothing_provider.dart';
+import '../widgets/glass_card.dart';
 import 'clothing_detail_page.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -58,7 +59,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               _getGreeting(),
                               style: TextStyle(
                                 fontSize: 16,
-                                color: colorScheme.onSurface.withOpacity(0.6),
+                                color: colorScheme.onSurface.withValues(alpha: 0.6),
                               ),
                             ),
                             const SizedBox(height: 4),
@@ -132,161 +133,150 @@ class _HomeScreenState extends State<HomeScreen> {
 
                 if (recentItems.isEmpty) {
                   return SliverToBoxAdapter(
-                    child: Container(
+                    child: GlassCard(
                       margin: const EdgeInsets.symmetric(horizontal: 20),
-                      height: 200,
-                      decoration: BoxDecoration(
-                        color: colorScheme.surfaceContainerHighest,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(20),
-                            decoration: BoxDecoration(
-                              color: colorScheme.primaryContainer,
-                              shape: BoxShape.circle,
+                      child: SizedBox(
+                        height: 200,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(20),
+                              decoration: BoxDecoration(
+                                color: colorScheme.primaryContainer,
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                Icons.add_photo_alternate_outlined,
+                                size: 40,
+                                color: colorScheme.onPrimaryContainer,
+                              ),
                             ),
-                            child: Icon(
-                              Icons.add_photo_alternate_outlined,
-                              size: 40,
-                              color: colorScheme.onPrimaryContainer,
+                            const SizedBox(height: 16),
+                            Text(
+                              '暂无衣物',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: colorScheme.onSurface,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            '暂无衣物',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: colorScheme.onSurface,
+                            const SizedBox(height: 8),
+                            Text(
+                              '点击下方 + 按钮开始录入',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: colorScheme.onSurface.withValues(alpha: 0.6),
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            '点击下方 + 按钮开始录入',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: colorScheme.onSurface.withOpacity(0.6),
-                            ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   );
                 }
 
                 return SliverToBoxAdapter(
-                  child: SizedBox(
-                    height: 220,
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      itemCount: recentItems.length,
-                      itemBuilder: (context, index) {
-                        final item = recentItems[index];
-                        return GestureDetector(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => ClothingDetailPage(item: item),
-                              ),
-                            );
-                          },
-                          child: Container(
-                            width: 160,
-                            margin: const EdgeInsets.only(right: 16),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(20),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.08),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 4),
+                  child: GlassCard(
+                    borderRadius: 20,
+                    margin: const EdgeInsets.symmetric(horizontal: 20),
+                    child: SizedBox(
+                      height: 220,
+                      child: ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        itemCount: recentItems.length,
+                        itemBuilder: (context, index) {
+                          final item = recentItems[index];
+                          return GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => ClothingDetailPage(item: item),
                                 ),
-                              ],
-                            ),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(20),
-                              child: Stack(
-                                children: [
-                                  // 图片区域
-                                  SizedBox(
-                                    height: 220,
-                                    width: 160,
-                                    child: item.imagePath.isNotEmpty
-                                        ? Image.file(
-                                            File(item.imagePath),
-                                            fit: BoxFit.cover,
-                                          )
-                                        : Container(
-                                            color: colorScheme.surfaceContainerHighest,
-                                            child: Icon(
-                                              Icons.checkroom_outlined,
-                                              size: 50,
-                                              color: colorScheme.onSurface.withOpacity(0.3),
+                              );
+                            },
+                            child: Container(
+                              width: 160,
+                              margin: const EdgeInsets.only(right: 16),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(20),
+                                child: Stack(
+                                  children: [
+                                    SizedBox(
+                                      height: 220,
+                                      width: 160,
+                                      child: item.imagePath.isNotEmpty
+                                          ? Image.file(
+                                              File(item.imagePath),
+                                              fit: BoxFit.cover,
+                                            )
+                                          : Container(
+                                              color: colorScheme.surfaceContainerHighest,
+                                              child: Icon(
+                                                Icons.checkroom_outlined,
+                                                size: 50,
+                                                color: colorScheme.onSurface.withValues(alpha: 0.3),
+                                              ),
                                             ),
+                                    ),
+                                    Positioned(
+                                      bottom: 0,
+                                      left: 0,
+                                      right: 0,
+                                      height: 80,
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          gradient: LinearGradient(
+                                            begin: Alignment.topCenter,
+                                            end: Alignment.bottomCenter,
+                                            colors: [
+                                              Colors.transparent,
+                                              Colors.black.withValues(alpha: 0.7),
+                                            ],
                                           ),
-                                  ),
-                                  // 渐变遮罩
-                                  Positioned(
-                                    bottom: 0,
-                                    left: 0,
-                                    right: 0,
-                                    height: 80,
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        gradient: LinearGradient(
-                                          begin: Alignment.topCenter,
-                                          end: Alignment.bottomCenter,
-                                          colors: [
-                                            Colors.transparent,
-                                            Colors.black.withOpacity(0.7),
-                                          ],
                                         ),
                                       ),
                                     ),
-                                  ),
-                                  // 文字信息（放在底部）
-                                  Positioned(
-                                    left: 12,
-                                    right: 12,
-                                    bottom: 12,
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Text(
-                                          item.category,
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 15,
-                                            color: Colors.white,
+                                    Positioned(
+                                      left: 12,
+                                      right: 12,
+                                      bottom: 12,
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(
+                                            item.category,
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 15,
+                                              color: Colors.white,
+                                            ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
                                           ),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                        const SizedBox(height: 2),
-                                        Text(
-                                          item.style,
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: Colors.white.withOpacity(0.8),
+                                          const SizedBox(height: 2),
+                                          Text(
+                                            item.style,
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: Colors.white.withValues(alpha: 0.8),
+                                            ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
                                           ),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ],
+                                        ],
+                                      ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
                             ),
-                          ),
-                        );
-                      },
+                          );
+                        },
+                      ),
                     ),
                   ),
                 );
