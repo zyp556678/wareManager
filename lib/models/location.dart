@@ -3,6 +3,7 @@ class Location {
   final String name;
   final String type; // home, office, gym, travel, other
   final String? description;
+  final String? address;
   final DateTime createdAt;
 
   Location({
@@ -10,6 +11,7 @@ class Location {
     required this.name,
     required this.type,
     this.description,
+    this.address,
     required this.createdAt,
   });
 
@@ -19,6 +21,7 @@ class Location {
       'name': name,
       'type': type,
       'description': description,
+      'address': address,
       'createdAt': createdAt.millisecondsSinceEpoch,
     };
   }
@@ -29,6 +32,7 @@ class Location {
       name: map['name'],
       type: map['type'],
       description: map['description'],
+      address: map['address'],
       createdAt: DateTime.fromMillisecondsSinceEpoch(map['createdAt']),
     );
   }
@@ -38,6 +42,7 @@ class Location {
     String? name,
     String? type,
     String? description,
+    String? address,
     DateTime? createdAt,
   }) {
     return Location(
@@ -45,6 +50,7 @@ class Location {
       name: name ?? this.name,
       type: type ?? this.type,
       description: description ?? this.description,
+      address: address ?? this.address,
       createdAt: createdAt ?? this.createdAt,
     );
   }

@@ -7,11 +7,10 @@ class ThemeProvider extends ChangeNotifier {
   late SharedPreferences _prefs;
 
   static const List<String> colorNames = [
-    '晨间燕麦',
-    '海盐薄荷',
-    '摩卡拿铁',
-    '薰衣草灰',
-    '极简石墨',
+    '曜石青蓝',
+    '薄荷森绿',
+    '晨曦柔粉',
+    '暮光紫罗兰',
   ];
 
   ThemeProvider() {
@@ -53,126 +52,101 @@ class ThemeProvider extends ChangeNotifier {
       case 0:
         colorScheme = isLight
             ? const ColorScheme.light(
-                primary: Color(0xFF9C7B6C),
+                primary: Color(0xFF64B5F6),
                 onPrimary: Colors.white,
-                secondary: Color(0xFFE9DACB),
-                onSecondary: Color(0xFF2C2A29),
-                surface: Color(0xFFFDF8F5),
-                onSurface: Color(0xFF2C2A29),
-                error: Color(0xFFD97A7A),
+                secondary: Color(0xFFE3F2FD),
+                onSecondary: Color(0xFF0D47A1),
+                surface: Color(0xFFFAFAFA),
+                onSurface: Color(0xFF37474F),
+                error: Color(0xFFE57373),
                 onError: Colors.white,
-                outline: Color(0xFFEFE2D6),
+                outline: Color(0xFFBBDEFB),
               )
             : const ColorScheme.dark(
-                primary: Color(0xFFB5927F),
-                onPrimary: Color(0xFF1E1A18),
-                secondary: Color(0xFF3D332C),
-                onSecondary: Color(0xFFE9DACB),
-                surface: Color(0xFF1E1A18),
-                onSurface: Color(0xFFFDF8F5),
-                error: Color(0xFFE88D67),
-                onError: Color(0xFF2C2A29),
-                outline: Color(0xFF4A3F38),
+                primary: Color(0xFF90CAF9),
+                onPrimary: Color(0xFF0D47A1),
+                secondary: Color(0xFF1E3A5F),
+                onSecondary: Color(0xFFE3F2FD),
+                surface: Color(0xFF1A1A2E),
+                onSurface: Color(0xFFE3F2FD),
+                error: Color(0xFFEF9A9A),
+                onError: Color(0xFF1A1A2E),
+                outline: Color(0xFF2E5A8F),
               );
         break;
       case 1:
         colorScheme = isLight
             ? const ColorScheme.light(
-                primary: Color(0xFF6C9E8A),
+                primary: Color(0xFF81C784),
                 onPrimary: Colors.white,
-                secondary: Color(0xFFDEEDE6),
-                onSecondary: Color(0xFF1F2E2A),
-                surface: Color(0xFFF5FBF8),
-                onSurface: Color(0xFF1F2E2A),
-                error: Color(0xFFF4B784),
-                onError: Color(0xFF1F2E2A),
-                outline: Color(0xFFDCE9E2),
+                secondary: Color(0xFFE8F5E9),
+                onSecondary: Color(0xFF1B5E20),
+                surface: Color(0xFFFAFAFA),
+                onSurface: Color(0xFF37474F),
+                error: Color(0xFFE57373),
+                onError: Colors.white,
+                outline: Color(0xFFC8E6C9),
               )
             : const ColorScheme.dark(
-                primary: Color(0xFF8BBBA5),
-                onPrimary: Color(0xFF1A2A24),
-                secondary: Color(0xFF2D3F38),
-                onSecondary: Color(0xFFDEEDE6),
-                surface: Color(0xFF1C2622),
-                onSurface: Color(0xFFF5FBF8),
-                error: Color(0xFFD99E6B),
-                onError: Color(0xFF1F2E2A),
-                outline: Color(0xFF3B5348),
+                primary: Color(0xFFA5D6A7),
+                onPrimary: Color(0xFF1B5E20),
+                secondary: Color(0xFF1B3D1F),
+                onSecondary: Color(0xFFE8F5E9),
+                surface: Color(0xFF1A2E1C),
+                onSurface: Color(0xFFE8F5E9),
+                error: Color(0xFFEF9A9A),
+                onError: Color(0xFF1A2E1C),
+                outline: Color(0xFF2E5530),
               );
         break;
       case 2:
         colorScheme = isLight
             ? const ColorScheme.light(
-                primary: Color(0xFFB87B5E),
+                primary: Color(0xFFF48FB1),
                 onPrimary: Colors.white,
-                secondary: Color(0xFFF0E2D4),
-                onSecondary: Color(0xFF3A2C28),
-                surface: Color(0xFFFCF8F2),
-                onSurface: Color(0xFF3A2C28),
-                error: Color(0xFFC97B5A),
+                secondary: Color(0xFFFCE4EC),
+                onSecondary: Color(0xFF880E4F),
+                surface: Color(0xFFFAFAFA),
+                onSurface: Color(0xFF37474F),
+                error: Color(0xFFE57373),
                 onError: Colors.white,
-                outline: Color(0xFFEADBCE),
+                outline: Color(0xFFF8BBD0),
               )
             : const ColorScheme.dark(
-                primary: Color(0xFFD49B7C),
-                onPrimary: Color(0xFF2A1E18),
-                secondary: Color(0xFF3D2E26),
-                onSecondary: Color(0xFFF0E2D4),
-                surface: Color(0xFF201A16),
-                onSurface: Color(0xFFFCF8F2),
-                error: Color(0xFFE0926A),
-                onError: Color(0xFF2A1E18),
-                outline: Color(0xFF4E3D32),
+                primary: Color(0xFFF06292),
+                onPrimary: Color(0xFF880E4F),
+                secondary: Color(0xFF3D1A2A),
+                onSecondary: Color(0xFFFCE4EC),
+                surface: Color(0xFF1A1418),
+                onSurface: Color(0xFFFCE4EC),
+                error: Color(0xFFEF9A9A),
+                onError: Color(0xFF1A1418),
+                outline: Color(0xFF5E2A3D),
               );
         break;
       case 3:
         colorScheme = isLight
             ? const ColorScheme.light(
-                primary: Color(0xFFA192B2),
+                primary: Color(0xFFBA68C8),
                 onPrimary: Colors.white,
-                secondary: Color(0xFFEAE3F2),
-                onSecondary: Color(0xFF2D2A33),
-                surface: Color(0xFFFEFAFD),
-                onSurface: Color(0xFF2D2A33),
-                error: Color(0xFFF0A6A6),
-                onError: Color(0xFF2D2A33),
-                outline: Color(0xFFE8E0F0),
-              )
-            : const ColorScheme.dark(
-                primary: Color(0xFFBDAAD0),
-                onPrimary: Color(0xFF201C2A),
-                secondary: Color(0xFF342E3D),
-                onSecondary: Color(0xFFEAE3F2),
-                surface: Color(0xFF1F1B24),
-                onSurface: Color(0xFFFEFAFD),
-                error: Color(0xFFF2B3B3),
-                onError: Color(0xFF2D2A33),
-                outline: Color(0xFF4A4159),
-              );
-        break;
-      case 4:
-        colorScheme = isLight
-            ? const ColorScheme.light(
-                primary: Color(0xFF3A7B70),
-                onPrimary: Colors.white,
-                secondary: Color(0xFFE9F0EF),
-                onSecondary: Color(0xFF1E2422),
-                surface: Color(0xFFF7F9F9),
-                onSurface: Color(0xFF1E2422),
-                error: Color(0xFFC44536),
+                secondary: Color(0xFFF3E5F5),
+                onSecondary: Color(0xFF4A148C),
+                surface: Color(0xFFFAFAFA),
+                onSurface: Color(0xFF37474F),
+                error: Color(0xFFE57373),
                 onError: Colors.white,
-                outline: Color(0xFFE2E9E7),
+                outline: Color(0xFFE1BEE7),
               )
             : const ColorScheme.dark(
-                primary: Color(0xFF5C9E8F),
-                onPrimary: Color(0xFF1A2422),
-                secondary: Color(0xFF2C3A36),
-                onSecondary: Color(0xFFE9F0EF),
-                surface: Color(0xFF1C2220),
-                onSurface: Color(0xFFF7F9F9),
-                error: Color(0xFFD96A5A),
-                onError: Color(0xFF1E2422),
-                outline: Color(0xFF3D4E48),
+                primary: Color(0xFFCE93D8),
+                onPrimary: Color(0xFF4A148C),
+                secondary: Color(0xFF2E1A3E),
+                onSecondary: Color(0xFFF3E5F5),
+                surface: Color(0xFF1A1524),
+                onSurface: Color(0xFFF3E5F5),
+                error: Color(0xFFEF9A9A),
+                onError: Color(0xFF1A1524),
+                outline: Color(0xFF4A2A50),
               );
         break;
       default:
@@ -190,7 +164,7 @@ class ThemeProvider extends ChangeNotifier {
       ),
       cardTheme: CardThemeData(
         color: colorScheme.surface,
-        elevation: 2,
+        elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
         ),
@@ -218,11 +192,17 @@ class ThemeProvider extends ChangeNotifier {
         ),
       ),
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
-        backgroundColor: Colors.transparent,
+        backgroundColor: colorScheme.surface,
         selectedItemColor: colorScheme.primary,
         unselectedItemColor: colorScheme.onSurface.withValues(alpha: 0.5),
         type: BottomNavigationBarType.fixed,
         elevation: 0,
+      ),
+      navigationBarTheme: NavigationBarThemeData(
+        backgroundColor: colorScheme.surface,
+        indicatorColor: colorScheme.primary.withValues(alpha: 0.1),
+        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+        height: 72,
       ),
     );
   }

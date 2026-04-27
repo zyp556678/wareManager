@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:path_provider/path_provider.dart';
 import '../providers/theme_provider.dart';
 import 'theme_color_screen.dart';
@@ -91,20 +91,11 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future<void> _sendFeedback() async {
-    final Uri emailUri = Uri(
-      scheme: 'mailto',
-      path: 'taitanyunluo4@yeah.net',
-      query: 'subject=${Uri.encodeComponent('穿戴管家反馈')}',
-    );
-
-    if (await canLaunchUrl(emailUri)) {
-      await launchUrl(emailUri);
-    } else {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('无法打开邮件客户端')),
-        );
-      }
+    await Clipboard.setData(const ClipboardData(text: 'taitanyunluo4@yeah.net'));
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('邮箱已复制，感谢您的每一次pull request！')),
+      );
     }
   }
 

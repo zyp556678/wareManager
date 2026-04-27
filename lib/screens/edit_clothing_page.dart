@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../models/clothing_item.dart';
+import '../models/operation_log.dart';
 import '../providers/clothing_provider.dart';
 import 'package:provider/provider.dart';
 
@@ -19,13 +20,13 @@ class _EditClothingPageState extends State<EditClothingPage> {
   late TextEditingController _colorController;
   late TextEditingController _materialController;
   late TextEditingController _styleController;
-  late TextEditingController _seasonController;
   String? _imagePath;
 
   final List<String> _categories = ['上衣', '裤子', '裙装', '外套', '鞋子', '配饰'];
   final List<String> _styles = ['休闲', '商务', '运动', '约会', '派对'];
   final List<String> _materials = ['棉', '麻', '丝', '羊毛', '涤纶', '牛仔', '皮革'];
-  final List<String> _seasons = ['春', '夏', '秋', '冬', '四季'];
+  final List<String> _seasons = ['四季', '春季', '夏季', '秋季', '冬季', '春秋', '春秋冬'];
+  late String _season;
 
   @override
   void initState() {
@@ -34,7 +35,7 @@ class _EditClothingPageState extends State<EditClothingPage> {
     _colorController = TextEditingController(text: widget.item.color);
     _materialController = TextEditingController(text: widget.item.material);
     _styleController = TextEditingController(text: widget.item.style);
-    _seasonController = TextEditingController(text: widget.item.season);
+    _season = widget.item.season.isNotEmpty ? widget.item.season : '四季';
     _imagePath = widget.item.imagePath;
   }
 
@@ -44,7 +45,6 @@ class _EditClothingPageState extends State<EditClothingPage> {
     _colorController.dispose();
     _materialController.dispose();
     _styleController.dispose();
-    _seasonController.dispose();
     super.dispose();
   }
 
@@ -76,10 +76,21 @@ class _EditClothingPageState extends State<EditClothingPage> {
       color: _colorController.text.trim(),
       material: _materialController.text.trim(),
       style: _styleController.text.trim(),
-      season: _seasonController.text.trim(),
+      season: _season,
     );
 
     await context.read<ClothingProvider>().updateClothingItem(updatedItem);
+    
+    // 记录编辑日志
+    await context.read<ClothingProvider>().addOperationLog(
+      OperationLog(
+        type: 'edit',
+        clothingId: updatedItem.id,
+        clothingName: '${updatedItem.category} · ${updatedItem.color}',
+        content: '编辑衣物',
+        createdAt: DateTime.now(),
+      ),
+    );
     
     if (mounted) {
       Navigator.pop(context);
@@ -198,15 +209,24 @@ class _EditClothingPageState extends State<EditClothingPage> {
             ),
             const SizedBox(height: 16),
 
-            _buildDropdownField(
-              label: '季节',
-              value: _seasonController.text,
-              items: _seasons,
-              onChanged: (value) {
-                setState(() {
-                  _seasonController.text = value!;
-                });
-              },
+            // 季节选择
+            const Text('季节', style: TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              children: _seasons.map((season) {
+                return ChoiceChip(
+                  label: Text(season),
+                  selected: _season == season,
+                  onSelected: (selected) {
+                    if (selected) {
+                      setState(() {
+                        _season = season;
+                      });
+                    }
+                  },
+                );
+              }).toList(),
             ),
             const SizedBox(height: 24),
 

@@ -6,9 +6,14 @@ import '../models/clothing_item.dart';
 import 'clothing_detail_page.dart';
 import 'edit_clothing_page.dart';
 
-class IdleTab extends StatelessWidget {
+class IdleTab extends StatefulWidget {
   const IdleTab({super.key});
 
+  @override
+  State<IdleTab> createState() => _IdleTabState();
+}
+
+class _IdleTabState extends State<IdleTab> {
   Future<void> _wakeUpIdle(BuildContext context, ClothingItem item) async {
     await context.read<ClothingProvider>().wakeUpIdle(item.id!);
     if (context.mounted) {
@@ -56,6 +61,38 @@ class IdleTab extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  String _formatIdleDuration(DateTime idleUntil) {
+    final now = DateTime.now();
+    final difference = idleUntil.difference(now).inDays;
+
+    if (difference < 0) {
+      final pastDays = difference.abs();
+      if (pastDays == 1) {
+        return '已闲置 1 天';
+      } else if (pastDays < 30) {
+        return '已闲置 $pastDays 天';
+      } else if (pastDays < 365) {
+        final months = (pastDays / 30).floor();
+        return '已闲置 $months 个月';
+      } else {
+        final years = (pastDays / 365).floor();
+        return '已闲置 $years 年';
+      }
+    } else if (difference == 0) {
+      return '今天开始闲置';
+    } else if (difference == 1) {
+      return '明天闲置结束';
+    } else if (difference < 30) {
+      return '$difference 天后闲置结束';
+    } else if (difference < 365) {
+      final months = (difference / 30).floor();
+      return '$months 个月后闲置结束';
+    } else {
+      final years = (difference / 365).floor();
+      return '$years 年后闲置结束';
+    }
   }
 
   Future<void> _showDeleteConfirm(BuildContext context, ClothingItem item) async {
@@ -203,7 +240,7 @@ class IdleTab extends StatelessWidget {
                                 ),
                                 const SizedBox(height: 8),
                                 Text(
-                                  '闲置至 ${item.idleUntil?.year}-${item.idleUntil?.month.toString().padLeft(2, '0')}-${item.idleUntil?.day.toString().padLeft(2, '0')}',
+                                  _formatIdleDuration(item.idleUntil!),
                                   style: TextStyle(
                                     fontSize: 12,
                                     color: Colors.grey[600],

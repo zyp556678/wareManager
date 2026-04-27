@@ -1,5 +1,5 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'screens/home_screen.dart';
@@ -52,6 +52,15 @@ class WearWiseApp extends StatelessWidget {
             theme: themeProvider.lightTheme,
             darkTheme: themeProvider.darkTheme,
             themeMode: themeProvider.themeMode,
+            locale: const Locale('zh', 'CN'),
+            localizationsDelegates: const [
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+            ],
+            supportedLocales: const [
+              Locale('zh', 'CN'),
+              Locale('en', 'US'),
+            ],
             home: const MainScreen(),
           );
         },
@@ -64,17 +73,48 @@ class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
 
   @override
-  State<MainScreen> createState() => _MainScreenState();
+  State<MainScreen> createState() => MainScreenState();
 }
 
-class _MainScreenState extends State<MainScreen> {
+class MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
-  final PageController _pageController = PageController(initialPage: 0);
+  late PageController _pageController;
+  final GlobalKey<WardrobeScreenState> _wardrobeKey = GlobalKey<WardrobeScreenState>();
+  int? _pendingWardrobeTab;
 
-  final List<Widget> _screens = const [
-    HomeScreen(),
-    WardrobeScreen(),
-    ProfileScreen(),
+  void setTabIndex(int index) {
+    final navIndex = index > 1 ? index + 1 : index;
+    _pageController.animateToPage(
+      navIndex,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
+    setState(() {
+      _currentIndex = index;
+    });
+  }
+
+  void setWardrobeTab(int tabIndex) {
+    _pendingWardrobeTab = tabIndex;
+    if (_currentIndex != 1) {
+      setTabIndex(1);
+    }
+    Future.delayed(const Duration(milliseconds: 400), () {
+      _wardrobeKey.currentState?.switchToTab(tabIndex);
+      _pendingWardrobeTab = null;
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController(initialPage: 0);
+  }
+
+  List<Widget> get _screens => [
+    HomeScreen(onNavigateToTab: setTabIndex),
+    WardrobeScreen(key: _wardrobeKey),
+    ProfileScreen(onNavigateToTab: setTabIndex, onNavigateToWardrobeTab: setWardrobeTab),
   ];
 
   @override
@@ -85,6 +125,8 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    
     return Scaffold(
       body: PageView(
         controller: _pageController,
@@ -93,76 +135,66 @@ class _MainScreenState extends State<MainScreen> {
           setState(() {
             _currentIndex = navIndex;
           });
+          if (index == 1 && _pendingWardrobeTab != null) {
+            Future.delayed(const Duration(milliseconds: 100), () {
+              _wardrobeKey.currentState?.switchToTab(_pendingWardrobeTab!);
+              _pendingWardrobeTab = null;
+            });
+          }
         },
         children: _screens,
       ),
-      bottomNavigationBar: ClipRect(
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
-          child: Container(
+      bottomNavigationBar: Container(
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.8),
+              color: colorScheme.surface,
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 10,
-                  offset: const Offset(0, -5),
+                  offset: const Offset(0, -2),
                 ),
               ],
             ),
-            child: BottomNavigationBar(
-              currentIndex: _currentIndex,
-              onTap: (index) {
+            child: NavigationBar(
+              height: 72,
+              selectedIndex: _currentIndex,
+              onDestinationSelected: (index) {
                 if (index == 2) {
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (_) => const CaptureScreen()),
                   );
                 } else {
-                  final targetIndex = index > 2 ? index - 1 : index;
-                  setState(() {
-                    _currentIndex = index;
-                  });
-                  _pageController.animateToPage(
-                    targetIndex,
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.easeInOut,
-                  );
+                  setTabIndex(index);
                 }
               },
-              type: BottomNavigationBarType.fixed,
-              selectedItemColor: Theme.of(context).colorScheme.primary,
-              unselectedItemColor: Colors.grey,
-              selectedFontSize: 12,
-              unselectedFontSize: 12,
-              elevation: 0,
               backgroundColor: Colors.transparent,
-              items: const [
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.home_outlined),
-                  activeIcon: Icon(Icons.home),
+              elevation: 0,
+              indicatorColor: colorScheme.primary.withValues(alpha: 0.1),
+              destinations: [
+                NavigationDestination(
+                  icon: Icon(Icons.home_outlined, color: Colors.grey[600]),
+                  selectedIcon: Icon(Icons.home, color: colorScheme.primary),
                   label: '首页',
                 ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.checkroom_outlined),
-                  activeIcon: Icon(Icons.checkroom),
+                NavigationDestination(
+                  icon: Icon(Icons.checkroom_outlined, color: Colors.grey[600]),
+                  selectedIcon: Icon(Icons.checkroom, color: colorScheme.primary),
                   label: '衣橱',
                 ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.camera_alt_outlined),
-                  activeIcon: Icon(Icons.camera_alt),
+                NavigationDestination(
+                  icon: Icon(Icons.add_circle_outline, color: Colors.grey[600]),
+                  selectedIcon: Icon(Icons.add_circle, color: colorScheme.primary),
                   label: '录入',
                 ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.person_outline),
-                  activeIcon: Icon(Icons.person),
+                NavigationDestination(
+                  icon: Icon(Icons.person_outline, color: Colors.grey[600]),
+                  selectedIcon: Icon(Icons.person, color: colorScheme.primary),
                   label: '我的',
                 ),
               ],
             ),
           ),
-        ),
-      ),
     );
   }
 }

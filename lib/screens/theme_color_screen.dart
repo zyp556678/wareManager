@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/theme_provider.dart';
-import '../widgets/glass_card.dart';
 
 class ThemeColorScreen extends StatelessWidget {
   const ThemeColorScreen({super.key});
@@ -9,6 +8,7 @@ class ThemeColorScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       appBar: AppBar(
@@ -25,10 +25,23 @@ class ThemeColorScreen extends StatelessWidget {
 
               return GestureDetector(
                 onTap: () => themeProvider.setColorScheme(index),
-                child: GlassCard(
+                child: Container(
                   margin: const EdgeInsets.only(bottom: 16),
                   padding: const EdgeInsets.all(16),
-                  borderColor: isSelected ? colorScheme.primary : null,
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF2C2C2C) : Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    border: isSelected
+                        ? Border.all(color: colorScheme.primary, width: 2)
+                        : null,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.06),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
                   child: Row(
                     children: [
                       Container(
@@ -117,57 +130,48 @@ class ThemeColorScreen extends StatelessWidget {
     switch (index) {
       case 0:
         return {
-          'primary': const Color(0xFF9C7B6C),
+          'primary': const Color(0xFF64B5F6),
           'onPrimary': Colors.white,
-          'secondary': const Color(0xFFE9DACB),
-          'onSecondary': const Color(0xFF2C2A29),
-          'surface': const Color(0xFFFDF8F5),
-          'onSurface': const Color(0xFF2C2A29),
+          'secondary': const Color(0xFFE3F2FD),
+          'onSecondary': const Color(0xFF0D47A1),
+          'surface': const Color(0xFFFAFAFA),
+          'onSurface': const Color(0xFF37474F),
         };
       case 1:
         return {
-          'primary': const Color(0xFF6C9E8A),
+          'primary': const Color(0xFF81C784),
           'onPrimary': Colors.white,
-          'secondary': const Color(0xFFDEEDE6),
-          'onSecondary': const Color(0xFF1F2E2A),
-          'surface': const Color(0xFFF5FBF8),
-          'onSurface': const Color(0xFF1F2E2A),
+          'secondary': const Color(0xFFE8F5E9),
+          'onSecondary': const Color(0xFF1B5E20),
+          'surface': const Color(0xFFFAFAFA),
+          'onSurface': const Color(0xFF37474F),
         };
       case 2:
         return {
-          'primary': const Color(0xFFB87B5E),
+          'primary': const Color(0xFFF48FB1),
           'onPrimary': Colors.white,
-          'secondary': const Color(0xFFF0E2D4),
-          'onSecondary': const Color(0xFF3A2C28),
-          'surface': const Color(0xFFFCF8F2),
-          'onSurface': const Color(0xFF3A2C28),
+          'secondary': const Color(0xFFFCE4EC),
+          'onSecondary': const Color(0xFF880E4F),
+          'surface': const Color(0xFFFAFAFA),
+          'onSurface': const Color(0xFF37474F),
         };
       case 3:
         return {
-          'primary': const Color(0xFFA192B2),
+          'primary': const Color(0xFFBA68C8),
           'onPrimary': Colors.white,
-          'secondary': const Color(0xFFEAE3F2),
-          'onSecondary': const Color(0xFF2D2A33),
-          'surface': const Color(0xFFFEFAFD),
-          'onSurface': const Color(0xFF2D2A33),
-        };
-      case 4:
-        return {
-          'primary': const Color(0xFF3A7B70),
-          'onPrimary': Colors.white,
-          'secondary': const Color(0xFFE9F0EF),
-          'onSecondary': const Color(0xFF1E2422),
-          'surface': const Color(0xFFF7F9F9),
-          'onSurface': const Color(0xFF1E2422),
+          'secondary': const Color(0xFFF3E5F5),
+          'onSecondary': const Color(0xFF4A148C),
+          'surface': const Color(0xFFFAFAFA),
+          'onSurface': const Color(0xFF37474F),
         };
       default:
         return {
-          'primary': const Color(0xFF9C7B6C),
+          'primary': const Color(0xFF64B5F6),
           'onPrimary': Colors.white,
-          'secondary': const Color(0xFFE9DACB),
-          'onSecondary': const Color(0xFF2C2A29),
-          'surface': const Color(0xFFFDF8F5),
-          'onSurface': const Color(0xFF2C2A29),
+          'secondary': const Color(0xFFE3F2FD),
+          'onSecondary': const Color(0xFF0D47A1),
+          'surface': const Color(0xFFFAFAFA),
+          'onSurface': const Color(0xFF37474F),
         };
     }
   }

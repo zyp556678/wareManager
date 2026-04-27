@@ -1,25 +1,42 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../providers/clothing_provider.dart';
-import '../widgets/glass_card.dart';
 import 'clothing_detail_page.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final Function(int)? onNavigateToTab;
+
+  const HomeScreen({super.key, this.onNavigateToTab});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  String? _avatarPath;
+
   @override
   void initState() {
     super.initState();
-    // 加载衣物数据
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<ClothingProvider>().loadClothingItems();
+      _loadUserProfile();
     });
+  }
+
+Future<void> _loadUserProfile() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (mounted) {
+        setState(() {
+          _avatarPath = prefs.getString('avatar_path');
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading user profile: $e');
+    }
   }
 
   String _getGreeting() {
@@ -73,16 +90,29 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                           ],
                         ),
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: colorScheme.primaryContainer,
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Icon(
-                            Icons.person_outline,
-                            color: colorScheme.onPrimaryContainer,
-                            size: 24,
+                        GestureDetector(
+                          onTap: () {
+                            widget.onNavigateToTab?.call(2);
+                          },
+                          child: Container(
+                            width: 48,
+                            height: 48,
+                            decoration: BoxDecoration(
+                              color: colorScheme.primaryContainer,
+                              shape: BoxShape.circle,
+                            ),
+                            child: _avatarPath != null && _avatarPath!.isNotEmpty
+                                ? ClipOval(
+                                    child: Image.file(
+                                      File(_avatarPath!),
+                                      fit: BoxFit.cover,
+                                    ),
+                                  )
+                                : Icon(
+                                    Icons.person,
+                                    color: colorScheme.onPrimaryContainer,
+                                    size: 24,
+                                  ),
                           ),
                         ),
                       ],
@@ -96,28 +126,13 @@ class _HomeScreenState extends State<HomeScreen> {
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      '最近存入',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: colorScheme.onSurface,
-                      ),
-                    ),
-                    TextButton.icon(
-                      onPressed: () {
-                        Navigator.of(context).popUntil((route) => route.isFirst);
-                      },
-                      icon: const Icon(Icons.arrow_forward, size: 16),
-                      label: const Text('查看全部'),
-                      style: TextButton.styleFrom(
-                        foregroundColor: colorScheme.primary,
-                      ),
-                    ),
-                  ],
+                child: Text(
+                  '最近存入',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: colorScheme.onSurface,
+                  ),
                 ),
               ),
             ),
@@ -133,53 +148,72 @@ class _HomeScreenState extends State<HomeScreen> {
 
                 if (recentItems.isEmpty) {
                   return SliverToBoxAdapter(
-                    child: GlassCard(
-                      margin: const EdgeInsets.symmetric(horizontal: 20),
-                      child: SizedBox(
-                        height: 200,
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(20),
-                              decoration: BoxDecoration(
-                                color: colorScheme.primaryContainer,
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(
-                                Icons.add_photo_alternate_outlined,
-                                size: 40,
-                                color: colorScheme.onPrimaryContainer,
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              '暂无衣物',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: colorScheme.onSurface,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              '点击下方 + 按钮开始录入',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: colorScheme.onSurface.withValues(alpha: 0.6),
-                              ),
-                            ),
-                          ],
-                        ),
+                    child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: 20),
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: colorScheme.surface,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.06),
+                      blurRadius: 16,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: colorScheme.primaryContainer,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.add_photo_alternate_outlined,
+                        size: 40,
+                        color: colorScheme.onPrimaryContainer,
                       ),
                     ),
+                    const SizedBox(height: 16),
+                    Text(
+                      '暂无衣物',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: colorScheme.onSurface,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      '点击下方 + 按钮开始录入',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: colorScheme.onSurface.withValues(alpha: 0.6),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
                   );
                 }
 
                 return SliverToBoxAdapter(
-                  child: GlassCard(
-                    borderRadius: 20,
+                  child: Container(
                     margin: const EdgeInsets.symmetric(horizontal: 20),
+                    decoration: BoxDecoration(
+                      color: colorScheme.surface,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.06),
+                          blurRadius: 16,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
                     child: SizedBox(
                       height: 220,
                       child: ListView.builder(

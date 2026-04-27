@@ -38,6 +38,19 @@ android {
             signingConfig = signingConfigs.getByName("debug")
         }
     }
+    
+    // 自定义 APK 输出文件名
+    android.applicationVariants.all {
+        val variant = this
+        variant.outputs.map { output ->
+            val outputImpl = output as com.android.build.gradle.internal.api.BaseVariantOutputImpl
+            val appName = "WearWise"
+            val versionName = variant.versionName
+            val buildType = variant.buildType.name
+            
+            outputImpl.outputFileName = "${appName}-v${versionName}-${buildType}.apk"
+        }
+    }
 }
 
 dependencies {

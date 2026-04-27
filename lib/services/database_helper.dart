@@ -1,10 +1,10 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
-import 'package:flutter/foundation.dart';
 import '../models/clothing_item.dart';
 import '../models/outfit.dart';
 import '../models/outfit_log.dart';
 import '../models/location.dart';
+import '../models/operation_log.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
@@ -24,9 +24,26 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 1,
+      version: 6,
       onCreate: _createDB,
+      onUpgrade: _upgradeDB,
     );
+  }
+
+  Future<void> _upgradeDB(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 5) {
+      await db.execute('ALTER TABLE locations ADD COLUMN latitude REAL');
+      await db.execute('ALTER TABLE locations ADD COLUMN longitude REAL');
+    }
+    if (oldVersion < 6) {
+      try {
+        await db.execute('ALTER TABLE locations DROP COLUMN latitude');
+      } catch (_) {}
+      try {
+        await db.execute('ALTER TABLE locations DROP COLUMN longitude');
+      } catch (_) {}
+      await db.execute('ALTER TABLE locations ADD COLUMN address TEXT');
+    }
   }
 
   Future<void> _createDB(Database db, int version) async {
@@ -34,7 +51,6 @@ class DatabaseHelper {
     const textType = 'TEXT NOT NULL';
     const integerType = 'INTEGER NOT NULL';
 
-    // 衣物表
     await db.execute('''
       CREATE TABLE clothing_items (
         id $idType,
@@ -52,7 +68,6 @@ class DatabaseHelper {
       )
     ''');
 
-    // 穿搭表
     await db.execute('''
       CREATE TABLE outfits (
         id $idType,
@@ -63,7 +78,6 @@ class DatabaseHelper {
       )
     ''');
 
-    // 穿搭日志表
     await db.execute('''
       CREATE TABLE outfit_logs (
         id $idType,
@@ -74,7 +88,6 @@ class DatabaseHelper {
       )
     ''');
 
-    // 地点表
     await db.execute('''
       CREATE TABLE locations (
         id $idType,
@@ -84,9 +97,20 @@ class DatabaseHelper {
         createdAt $integerType
       )
     ''');
+
+    await db.execute('''
+      CREATE TABLE operation_logs (
+        id $idType,
+        type $textType,
+        clothing_id INTEGER,
+        clothing_name TEXT,
+        content TEXT,
+        extra TEXT,
+        created_at $integerType
+      )
+    ''');
   }
 
-  // ClothingItem CRUD
   Future<int> createClothingItem(ClothingItem item) async {
     final db = await database;
     return await db.insert('clothing_items', item.toMap());
@@ -122,15 +146,12 @@ class DatabaseHelper {
 
   Future<int> updateClothingItem(ClothingItem item) async {
     final db = await database;
-    debugPrint('DEBUG DB: Updating item ${item.id} with status: ${item.status}');
-    final result = await db.update(
+    return await db.update(
       'clothing_items',
       item.toMap(),
       where: 'id = ?',
       whereArgs: [item.id],
     );
-    debugPrint('DEBUG DB: Update result: $result rows affected');
-    return result;
   }
 
   Future<int> deleteClothingItem(int id) async {
@@ -142,7 +163,6 @@ class DatabaseHelper {
     );
   }
 
-  // Outfit CRUD
   Future<int> createOutfit(Outfit outfit) async {
     final db = await database;
     return await db.insert('outfits', outfit.toMap());
@@ -154,7 +174,6 @@ class DatabaseHelper {
     return result.map((map) => Outfit.fromMap(map)).toList();
   }
 
-  // OutfitLog CRUD
   Future<int> createOutfitLog(OutfitLog log) async {
     final db = await database;
     return await db.insert('outfit_logs', log.toMap());
@@ -163,8 +182,7 @@ class DatabaseHelper {
   Future<List<OutfitLog>> getOutfitLogsByMonth(DateTime month) async {
     final db = await database;
     final startOfMonth = DateTime(month.year, month.month, 1);
-    final endOfMonth = DateTime(month.year, month.month + 1, 0);
-    
+    final endOfMonth = DateTime(month.year, month.month + 1, 0, 23, 59, 59);
     final result = await db.query(
       'outfit_logs',
       where: 'date >= ? AND date <= ?',
@@ -177,7 +195,6 @@ class DatabaseHelper {
     return result.map((map) => OutfitLog.fromMap(map)).toList();
   }
 
-  // Location CRUD
   Future<int> createLocation(Location location) async {
     final db = await database;
     return await db.insert('locations', location.toMap());
@@ -206,6 +223,33 @@ class DatabaseHelper {
       where: 'id = ?',
       whereArgs: [id],
     );
+  }
+
+  Future<int> createOperationLog(OperationLog log) async {
+    final db = await database;
+    return await db.insert('operation_logs', log.toMap());
+  }
+
+  Future<List<OperationLog>> getAllOperationLogs() async {
+    final db = await database;
+    final result = await db.query('operation_logs', orderBy: 'created_at DESC');
+    return result.map((map) => OperationLog.fromMap(map)).toList();
+  }
+
+  Future<List<OperationLog>> getOperationLogsByMonth(DateTime month) async {
+    final db = await database;
+    final startOfMonth = DateTime(month.year, month.month, 1);
+    final endOfMonth = DateTime(month.year, month.month + 1, 0, 23, 59, 59);
+    final result = await db.query(
+      'operation_logs',
+      where: 'created_at >= ? AND created_at <= ?',
+      whereArgs: [
+        startOfMonth.millisecondsSinceEpoch,
+        endOfMonth.millisecondsSinceEpoch,
+      ],
+      orderBy: 'created_at DESC',
+    );
+    return result.map((map) => OperationLog.fromMap(map)).toList();
   }
 
   Future<void> close() async {

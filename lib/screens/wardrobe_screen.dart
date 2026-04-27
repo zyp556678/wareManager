@@ -4,19 +4,30 @@ import 'idle_tab.dart';
 import 'outfit_log_tab.dart';
 
 class WardrobeScreen extends StatefulWidget {
-  const WardrobeScreen({super.key});
+  final int initialTab;
+
+  const WardrobeScreen({super.key, this.initialTab = 0});
 
   @override
-  State<WardrobeScreen> createState() => _WardrobeScreenState();
+  State<WardrobeScreen> createState() => WardrobeScreenState();
 }
 
-class _WardrobeScreenState extends State<WardrobeScreen> with SingleTickerProviderStateMixin {
+class WardrobeScreenState extends State<WardrobeScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
+
+  void switchToTab(int index) {
+    if (index >= 0 && index < 3) {
+      _tabController.animateTo(index);
+    }
+  }
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 3, vsync: this, initialIndex: widget.initialTab);
+    _tabController.addListener(() {
+      setState(() {});
+    });
   }
 
   @override
@@ -37,9 +48,10 @@ class _WardrobeScreenState extends State<WardrobeScreen> with SingleTickerProvid
         bottom: TabBar(
           controller: _tabController,
           labelColor: colorScheme.primary,
-          unselectedLabelColor: Colors.grey,
+          unselectedLabelColor: colorScheme.onSurface.withValues(alpha: 0.5),
           indicatorColor: colorScheme.primary,
           indicatorWeight: 3,
+          labelStyle: const TextStyle(fontWeight: FontWeight.w600),
           tabs: const [
             Tab(text: '衣橱'),
             Tab(text: '闲置'),

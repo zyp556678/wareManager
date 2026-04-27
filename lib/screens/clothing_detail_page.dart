@@ -95,8 +95,8 @@ class ClothingDetailPage extends StatelessWidget {
                   // 闲置日期
                   if (item.idleUntil != null) ...[
                     _buildInfoRow(
-                      '闲置至',
-                      '${item.idleUntil!.year}-${item.idleUntil!.month.toString().padLeft(2, '0')}-${item.idleUntil!.day.toString().padLeft(2, '0')}',
+                      '闲置状态',
+                      _formatIdleDuration(item.idleUntil!),
                     ),
                     const SizedBox(height: 12),
                   ],
@@ -178,6 +178,10 @@ class ClothingDetailPage extends StatelessWidget {
                       initialDate: DateTime.now().add(const Duration(days: 30)),
                       firstDate: DateTime.now(),
                       lastDate: DateTime.now().add(const Duration(days: 365)),
+                      locale: const Locale('zh', 'CN'),
+                      helpText: '选择闲置开始日期',
+                      confirmText: '确认',
+                      cancelText: '取消',
                     );
                     
                     if (date != null && context.mounted) {
@@ -237,5 +241,37 @@ class ClothingDetailPage extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  String _formatIdleDuration(DateTime idleUntil) {
+    final now = DateTime.now();
+    final difference = idleUntil.difference(now).inDays;
+
+    if (difference < 0) {
+      final pastDays = difference.abs();
+      if (pastDays == 1) {
+        return '已闲置 1 天';
+      } else if (pastDays < 30) {
+        return '已闲置 $pastDays 天';
+      } else if (pastDays < 365) {
+        final months = (pastDays / 30).floor();
+        return '已闲置 $months 个月';
+      } else {
+        final years = (pastDays / 365).floor();
+        return '已闲置 $years 年';
+      }
+    } else if (difference == 0) {
+      return '今天开始闲置';
+    } else if (difference == 1) {
+      return '明天闲置结束';
+    } else if (difference < 30) {
+      return '$difference 天后闲置结束';
+    } else if (difference < 365) {
+      final months = (difference / 30).floor();
+      return '$months 个月后闲置结束';
+    } else {
+      final years = (difference / 365).floor();
+      return '$years 年后闲置结束';
+    }
   }
 }

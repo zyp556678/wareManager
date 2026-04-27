@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:geocoding/geocoding.dart';
 import '../models/location.dart' as model;
 import '../services/database_helper.dart';
 
@@ -37,92 +39,204 @@ class _LocationManagementPageState extends State<LocationManagementPage> {
     final nameController = TextEditingController();
     String selectedType = 'home';
     final descriptionController = TextEditingController();
+    String? address;
+    bool isLoadingLocation = false;
 
     await showDialog(
       context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          title: const Text('添加地点'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: nameController,
-                  decoration: const InputDecoration(
-                    labelText: '地点名称',
-                    hintText: '例如：主卧衣柜、办公室',
-                  ),
-                ),
-                const SizedBox(height: 16),
-                DropdownButtonFormField<String>(
-                  value: selectedType,
-                  decoration: const InputDecoration(labelText: '地点类型'),
-                  items: const [
-                    DropdownMenuItem(value: 'home', child: Text('家')),
-                    DropdownMenuItem(value: 'office', child: Text('办公室')),
-                    DropdownMenuItem(value: 'gym', child: Text('健身房')),
-                    DropdownMenuItem(value: 'travel', child: Text('旅行')),
-                    DropdownMenuItem(value: 'other', child: Text('其他')),
-                  ],
-                  onChanged: (value) {
-                    setDialogState(() {
-                      selectedType = value!;
-                    });
-                  },
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: descriptionController,
-                  decoration: const InputDecoration(
-                    labelText: '描述（可选）',
-                    hintText: '例如：二楼左侧衣柜',
-                  ),
-                  maxLines: 2,
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('取消'),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                if (nameController.text.trim().isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('请输入地点名称')),
-                  );
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, setDialogState) {
+          Future<void> getCurrentLocation() async {
+            setDialogState(() => isLoadingLocation = true);
+            try {
+              final permission = await Geolocator.checkPermission();
+              if (permission == LocationPermission.denied) {
+                final requested = await Geolocator.requestPermission();
+                if (requested == LocationPermission.denied ||
+                    requested == LocationPermission.deniedForever) {
+                  if (dialogContext.mounted) {
+                    ScaffoldMessenger.of(dialogContext).showSnackBar(
+                      const SnackBar(content: Text('定位权限被拒绝')),
+                    );
+                  }
+                  setDialogState(() => isLoadingLocation = false);
                   return;
                 }
+              }
 
-                final location = model.Location(
-                  name: nameController.text.trim(),
-                  type: selectedType,
-                  description: descriptionController.text.trim().isEmpty
-                      ? null
-                      : descriptionController.text.trim(),
-                  createdAt: DateTime.now(),
-                );
+              final position = await Geolocator.getCurrentPosition(
+                desiredAccuracy: LocationAccuracy.high,
+              );
 
-                await DatabaseHelper.instance.createLocation(location);
-                if (mounted) {
-                  Navigator.pop(context);
+              final placemarks = await placemarkFromCoordinates(
+                position.latitude,
+                position.longitude,
+              );
+
+              if (placemarks.isNotEmpty) {
+                final place = placemarks.first;
+                final parts = <String>[];
+                if (place.administrativeArea != null && place.administrativeArea!.isNotEmpty) {
+                  parts.add(place.administrativeArea!);
                 }
-                if (mounted) {
-                  _loadLocations();
+                if (place.subLocality != null && place.subLocality!.isNotEmpty) {
+                  parts.add(place.subLocality!);
                 }
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('地点添加成功')),
+                if (place.street != null && place.street!.isNotEmpty) {
+                  parts.add(place.street!);
+                }
+                final addressStr = parts.join('');
+                setDialogState(() {
+                  address = addressStr.isNotEmpty ? addressStr : '未知地址';
+                  isLoadingLocation = false;
+                });
+                if (dialogContext.mounted) {
+                  ScaffoldMessenger.of(dialogContext).showSnackBar(
+                    SnackBar(content: Text('已获取位置: $address')),
                   );
                 }
-              },
-              child: const Text('添加'),
+              } else {
+                setDialogState(() => isLoadingLocation = false);
+                if (dialogContext.mounted) {
+                  ScaffoldMessenger.of(dialogContext).showSnackBar(
+                    const SnackBar(content: Text('无法解析地址')),
+                  );
+                }
+              }
+            } catch (e) {
+              setDialogState(() => isLoadingLocation = false);
+              if (dialogContext.mounted) {
+                ScaffoldMessenger.of(dialogContext).showSnackBar(
+                  SnackBar(content: Text('获取位置失败: $e')),
+                );
+              }
+            }
+          }
+
+          return AlertDialog(
+            title: const Text('添加地点'),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: nameController,
+                    decoration: const InputDecoration(
+                      labelText: '地点名称',
+                      hintText: '例如：主卧衣柜、办公室',
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<String>(
+                    value: selectedType,
+                    decoration: const InputDecoration(labelText: '地点类型'),
+                    items: const [
+                      DropdownMenuItem(value: 'home', child: Text('家')),
+                      DropdownMenuItem(value: 'office', child: Text('办公室')),
+                      DropdownMenuItem(value: 'gym', child: Text('健身房')),
+                      DropdownMenuItem(value: 'travel', child: Text('旅行')),
+                      DropdownMenuItem(value: 'other', child: Text('其他')),
+                    ],
+                    onChanged: (value) {
+                      setDialogState(() {
+                        selectedType = value!;
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: descriptionController,
+                    decoration: const InputDecoration(
+                      labelText: '描述（可选）',
+                      hintText: '例如：二楼左侧衣柜',
+                    ),
+                    maxLines: 2,
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: isLoadingLocation ? null : getCurrentLocation,
+                          icon: isLoadingLocation
+                              ? const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                )
+                              : const Icon(Icons.location_on),
+                          label: Text(address != null ? '已定位' : '获取位置'),
+                        ),
+                      ),
+                      if (address != null) ...[
+                        const SizedBox(width: 8),
+                        IconButton(
+                          icon: const Icon(Icons.clear),
+                          onPressed: () {
+                            setDialogState(() {
+                              address = null;
+                            });
+                          },
+                          tooltip: '清除位置',
+                        ),
+                      ],
+                    ],
+                  ),
+                  if (address != null) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      address!,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                  ],
+                ],
+              ),
             ),
-          ],
-        ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext),
+                child: const Text('取消'),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  if (nameController.text.trim().isEmpty) {
+                    ScaffoldMessenger.of(dialogContext).showSnackBar(
+                      const SnackBar(content: Text('请输入地点名称')),
+                    );
+                    return;
+                  }
+
+                  final location = model.Location(
+                    name: nameController.text.trim(),
+                    type: selectedType,
+                    description: descriptionController.text.trim().isEmpty
+                        ? null
+                        : descriptionController.text.trim(),
+                    address: address,
+                    createdAt: DateTime.now(),
+                  );
+
+                  await DatabaseHelper.instance.createLocation(location);
+                  if (mounted) {
+                    Navigator.pop(dialogContext);
+                  }
+                  if (mounted) {
+                    _loadLocations();
+                  }
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('地点添加成功')),
+                    );
+                  }
+                },
+                child: const Text('添加'),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -132,71 +246,182 @@ class _LocationManagementPageState extends State<LocationManagementPage> {
     String selectedType = location.type;
     final descriptionController =
         TextEditingController(text: location.description ?? '');
+    String? address = location.address;
+    bool isLoadingLocation = false;
 
     await showDialog(
       context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          title: const Text('编辑地点'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: nameController,
-                  decoration: const InputDecoration(labelText: '地点名称'),
-                ),
-                const SizedBox(height: 16),
-                DropdownButtonFormField<String>(
-                  value: selectedType,
-                  decoration: const InputDecoration(labelText: '地点类型'),
-                  items: const [
-                    DropdownMenuItem(value: 'home', child: Text('家')),
-                    DropdownMenuItem(value: 'office', child: Text('办公室')),
-                    DropdownMenuItem(value: 'gym', child: Text('健身房')),
-                    DropdownMenuItem(value: 'travel', child: Text('旅行')),
-                    DropdownMenuItem(value: 'other', child: Text('其他')),
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, setDialogState) {
+          Future<void> getCurrentLocation() async {
+            setDialogState(() => isLoadingLocation = true);
+            try {
+              final permission = await Geolocator.checkPermission();
+              if (permission == LocationPermission.denied) {
+                final requested = await Geolocator.requestPermission();
+                if (requested == LocationPermission.denied ||
+                    requested == LocationPermission.deniedForever) {
+                  if (dialogContext.mounted) {
+                    ScaffoldMessenger.of(dialogContext).showSnackBar(
+                      const SnackBar(content: Text('定位权限被拒绝')),
+                    );
+                  }
+                  setDialogState(() => isLoadingLocation = false);
+                  return;
+                }
+              }
+
+              final position = await Geolocator.getCurrentPosition(
+                desiredAccuracy: LocationAccuracy.high,
+              );
+
+              final placemarks = await placemarkFromCoordinates(
+                position.latitude,
+                position.longitude,
+              );
+
+              if (placemarks.isNotEmpty) {
+                final place = placemarks.first;
+                final parts = <String>[];
+                if (place.administrativeArea != null && place.administrativeArea!.isNotEmpty) {
+                  parts.add(place.administrativeArea!);
+                }
+                if (place.subLocality != null && place.subLocality!.isNotEmpty) {
+                  parts.add(place.subLocality!);
+                }
+                if (place.street != null && place.street!.isNotEmpty) {
+                  parts.add(place.street!);
+                }
+                final addressStr = parts.join('');
+                setDialogState(() {
+                  address = addressStr.isNotEmpty ? addressStr : '未知地址';
+                  isLoadingLocation = false;
+                });
+                if (dialogContext.mounted) {
+                  ScaffoldMessenger.of(dialogContext).showSnackBar(
+                    SnackBar(content: Text('已更新位置: $address')),
+                  );
+                }
+              } else {
+                setDialogState(() => isLoadingLocation = false);
+                if (dialogContext.mounted) {
+                  ScaffoldMessenger.of(dialogContext).showSnackBar(
+                    const SnackBar(content: Text('无法解析地址')),
+                  );
+                }
+              }
+            } catch (e) {
+              setDialogState(() => isLoadingLocation = false);
+              if (dialogContext.mounted) {
+                ScaffoldMessenger.of(dialogContext).showSnackBar(
+                  SnackBar(content: Text('获取位置失败: $e')),
+                );
+              }
+            }
+          }
+
+          return AlertDialog(
+            title: const Text('编辑地点'),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: nameController,
+                    decoration: const InputDecoration(labelText: '地点名称'),
+                  ),
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<String>(
+                    value: selectedType,
+                    decoration: const InputDecoration(labelText: '地点类型'),
+                    items: const [
+                      DropdownMenuItem(value: 'home', child: Text('家')),
+                      DropdownMenuItem(value: 'office', child: Text('办公室')),
+                      DropdownMenuItem(value: 'gym', child: Text('健身房')),
+                      DropdownMenuItem(value: 'travel', child: Text('旅行')),
+                      DropdownMenuItem(value: 'other', child: Text('其他')),
+                    ],
+                    onChanged: (value) {
+                      setDialogState(() {
+                        selectedType = value!;
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: descriptionController,
+                    decoration: const InputDecoration(labelText: '描述（可选）'),
+                    maxLines: 2,
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: isLoadingLocation ? null : getCurrentLocation,
+                          icon: isLoadingLocation
+                              ? const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                )
+                              : const Icon(Icons.location_on),
+                          label: Text(address != null ? '重新定位' : '获取位置'),
+                        ),
+                      ),
+                      if (address != null) ...[
+                        const SizedBox(width: 8),
+                        IconButton(
+                          icon: const Icon(Icons.clear),
+                          onPressed: () {
+                            setDialogState(() {
+                              address = null;
+                            });
+                          },
+                          tooltip: '清除位置',
+                        ),
+                      ],
+                    ],
+                  ),
+if (address != null) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      address!,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey[600],
+                      ),
+                    ),
                   ],
-                  onChanged: (value) {
-                    setDialogState(() {
-                      selectedType = value!;
-                    });
-                  },
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: descriptionController,
-                  decoration: const InputDecoration(labelText: '描述（可选）'),
-                  maxLines: 2,
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          actions: [
+            actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: () => Navigator.pop(dialogContext),
               child: const Text('取消'),
             ),
             ElevatedButton(
               onPressed: () async {
                 if (nameController.text.trim().isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
+                  ScaffoldMessenger.of(dialogContext).showSnackBar(
                     const SnackBar(content: Text('请输入地点名称')),
                   );
                   return;
                 }
 
-                final updatedLocation = location.copyWith(
+final updatedLocation = location.copyWith(
                   name: nameController.text.trim(),
                   type: selectedType,
                   description: descriptionController.text.trim().isEmpty
                       ? null
                       : descriptionController.text.trim(),
+                  address: address,
                 );
 
                 await DatabaseHelper.instance.updateLocation(updatedLocation);
                 if (mounted) {
-                  Navigator.pop(context);
+                  Navigator.pop(dialogContext);
                 }
                 if (mounted) {
                   _loadLocations();
@@ -210,7 +435,8 @@ class _LocationManagementPageState extends State<LocationManagementPage> {
               child: const Text('保存'),
             ),
           ],
-        ),
+        );
+        },
       ),
     );
   }
@@ -349,6 +575,26 @@ class _LocationManagementPageState extends State<LocationManagementPage> {
                                   fontSize: 12,
                                   color: Colors.grey[600],
                                 ),
+                              ),
+                            ],
+                            if (location.address != null && location.address!.isNotEmpty) ...[
+                              const SizedBox(height: 4),
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.location_on,
+                                    size: 14,
+                                    color: Colors.blue,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    location.address!,
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.blue,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
                           ],

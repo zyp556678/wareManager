@@ -1,51 +1,78 @@
 import 'package:flutter/foundation.dart';
 import '../models/clothing_item.dart';
+import '../models/operation_log.dart';
 import '../services/database_helper.dart';
 
 class ClothingProvider with ChangeNotifier {
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;
   List<ClothingItem> _clothingItems = [];
+  List<OperationLog> _operationLogs = [];
   bool _isLoading = false;
 
   List<ClothingItem> get clothingItems => _clothingItems;
+  List<OperationLog> get operationLogs => _operationLogs;
   bool get isLoading => _isLoading;
 
-  // 获取活跃衣物
   List<ClothingItem> get activeClothing =>
       _clothingItems.where((item) => item.status == 'active').toList();
 
-  // 获取闲置衣物
   List<ClothingItem> get idleClothing =>
       _clothingItems.where((item) => item.status == 'idle').toList();
 
-  // 加载所有衣物
   Future<void> loadClothingItems() async {
     _isLoading = true;
     notifyListeners();
 
     try {
       _clothingItems = await _dbHelper.getAllClothingItems();
+      _operationLogs = await _dbHelper.getAllOperationLogs();
     } catch (e) {
-      debugPrint('Error loading clothing items: $e');
+      debugPrint('Error loading data: $e');
     }
 
     _isLoading = false;
     notifyListeners();
   }
 
-  // 添加衣物
+  Future<void> addOperationLog(OperationLog log) async {
+    try {
+      final id = await _dbHelper.createOperationLog(log);
+      final newLog = OperationLog(
+        id: id,
+        type: log.type,
+        clothingId: log.clothingId,
+        clothingName: log.clothingName,
+        content: log.content,
+        extra: log.extra,
+        createdAt: log.createdAt,
+      );
+      _operationLogs.insert(0, newLog);
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Error adding operation log: $e');
+    }
+  }
+
   Future<void> addClothingItem(ClothingItem item) async {
     try {
       final id = await _dbHelper.createClothingItem(item);
       final newItem = item.copyWith(id: id);
       _clothingItems.insert(0, newItem);
+
+      await addOperationLog(OperationLog(
+        type: 'add',
+        clothingId: id,
+        clothingName: '${item.category} · ${item.color}',
+        content: '新增衣物',
+        createdAt: DateTime.now(),
+      ));
+
       notifyListeners();
     } catch (e) {
       debugPrint('Error adding clothing item: $e');
     }
   }
 
-  // 更新衣物
   Future<void> updateClothingItem(ClothingItem item) async {
     try {
       await _dbHelper.updateClothingItem(item);
@@ -59,56 +86,61 @@ class ClothingProvider with ChangeNotifier {
     }
   }
 
-  // 删除衣物
   Future<void> deleteClothingItem(int id) async {
-    try {
-      await _dbHelper.deleteClothingItem(id);
-      _clothingItems.removeWhere((item) => item.id == id);
-      notifyListeners();
-    } catch (e) {
-      debugPrint('Error deleting clothing item: $e');
-    }
+    final item = _clothingItems.firstWhere((c) => c.id == id);
+    await _dbHelper.deleteClothingItem(id);
+    _clothingItems.removeWhere((c) => c.id == id);
+
+    await addOperationLog(OperationLog(
+      type: 'delete',
+      clothingId: id,
+      clothingName: '${item.category} · ${item.color}',
+      content: '删除衣物',
+      createdAt: DateTime.now(),
+    ));
+
+    notifyListeners();
   }
 
-  // 按品类筛选
   List<ClothingItem> getByCategory(String category) {
     return _clothingItems
         .where((item) => item.category == category && item.status == 'active')
         .toList();
   }
 
-  // 设置衣物为闲置
   Future<void> setIdle(int id, DateTime until, String location) async {
     try {
-      debugPrint('DEBUG: Setting item $id as idle');
       final index = _clothingItems.indexWhere((c) => c.id == id);
       if (index == -1) {
         debugPrint('Error: Clothing item with id $id not found');
         return;
       }
-      
+
       final item = _clothingItems[index];
-      debugPrint('DEBUG: Found item: ${item.category}, current status: ${item.status}');
-      
       final updatedItem = item.copyWith(
         status: 'idle',
         idleUntil: until,
         storageLocation: location,
       );
-      
-      debugPrint('DEBUG: Updated item status to: ${updatedItem.status}');
+
       await updateClothingItem(updatedItem);
-      debugPrint('DEBUG: Successfully updated item in database');
-      
-      // 强制刷新列表
+
+      final dateStr = '${until.year}-${until.month.toString().padLeft(2, '0')}-${until.day.toString().padLeft(2, '0')}';
+      await addOperationLog(OperationLog(
+        type: 'idle',
+        clothingId: id,
+        clothingName: '${item.category} · ${item.color}',
+        content: '设为闲置',
+        extra: '闲置至 $dateStr，存放在 $location',
+        createdAt: DateTime.now(),
+      ));
+
       await loadClothingItems();
-      debugPrint('DEBUG: Reloaded clothing items list');
     } catch (e) {
       debugPrint('Error setting item as idle: $e');
     }
   }
 
-  // 唤醒闲置衣物
   Future<void> wakeUpIdle(int id) async {
     final item = _clothingItems.firstWhere((c) => c.id == id);
     final updatedItem = item.copyWith(
@@ -117,5 +149,13 @@ class ClothingProvider with ChangeNotifier {
       storageLocation: '',
     );
     await updateClothingItem(updatedItem);
+
+    await addOperationLog(OperationLog(
+      type: 'wakeup',
+      clothingId: id,
+      clothingName: '${item.category} · ${item.color}',
+      content: '唤醒衣物',
+      createdAt: DateTime.now(),
+    ));
   }
 }

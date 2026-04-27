@@ -77,6 +77,10 @@ class _WardrobeTabState extends State<WardrobeTab> {
       initialDate: DateTime.now().add(const Duration(days: 30)),
       firstDate: DateTime.now(),
       lastDate: DateTime.now().add(const Duration(days: 365)),
+      locale: const Locale('zh', 'CN'),
+      helpText: '选择闲置开始日期',
+      confirmText: '确认',
+      cancelText: '取消',
     );
 
     debugPrint('DEBUG: Date picker result: $date');

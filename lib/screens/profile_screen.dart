@@ -8,7 +8,10 @@ import 'settings_page.dart';
 import 'profile_edit_page.dart';
 
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key});
+  final Function(int)? onNavigateToTab;
+  final Function(int)? onNavigateToWardrobeTab;
+
+  const ProfileScreen({super.key, this.onNavigateToTab, this.onNavigateToWardrobeTab});
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -84,20 +87,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 margin: const EdgeInsets.all(20),
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      colorScheme.primary,
-                      colorScheme.secondary,
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(24),
+                  color: colorScheme.surface,
+                  borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: colorScheme.primary.withValues(alpha: 0.3),
+                      color: colorScheme.primary.withValues(alpha: 0.15),
                       blurRadius: 20,
-                      offset: const Offset(0, 10),
+                      offset: const Offset(0, 8),
                     ),
                   ],
                 ),
@@ -105,17 +101,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   children: [
                     Row(
                       children: [
-                        Stack(
+Stack(
                           children: [
                             Container(
                               padding: const EdgeInsets.all(3),
                               decoration: BoxDecoration(
-color: Colors.white.withValues(alpha: 0.3),
+                                color: colorScheme.primaryContainer,
                                 shape: BoxShape.circle,
                               ),
                               child: CircleAvatar(
                                 radius: 32,
-                                backgroundColor: Colors.white,
+                                backgroundColor: colorScheme.surface,
                                 child: _avatarPath != null && _avatarPath!.isNotEmpty
                                     ? ClipOval(
                                         child: Image.file(
@@ -138,13 +134,13 @@ color: Colors.white.withValues(alpha: 0.3),
                               child: Container(
                                 padding: const EdgeInsets.all(4),
                                 decoration: BoxDecoration(
-                                  color: Colors.white,
+                                  color: colorScheme.primary,
                                   shape: BoxShape.circle,
                                 ),
                                 child: Icon(
                                   Icons.edit,
                                   size: 14,
-                                  color: colorScheme.primary,
+                                  color: colorScheme.onPrimary,
                                 ),
                               ),
                             ),
@@ -159,7 +155,7 @@ color: Colors.white.withValues(alpha: 0.3),
                                 '欢迎回来',
                                 style: TextStyle(
                                   fontSize: 14,
-                                  color: Colors.white70,
+                                  color: colorScheme.onSurface.withValues(alpha: 0.6),
                                 ),
                               ),
                               const SizedBox(height: 4),
@@ -168,10 +164,10 @@ color: Colors.white.withValues(alpha: 0.3),
                                   Expanded(
                                     child: Text(
                                       _username,
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontSize: 22,
                                         fontWeight: FontWeight.bold,
-                                        color: Colors.white,
+                                        color: colorScheme.onSurface,
                                       ),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
@@ -179,7 +175,7 @@ color: Colors.white.withValues(alpha: 0.3),
                                   ),
                                   Icon(
                                     Icons.chevron_right,
-                                    color: Colors.white.withValues(alpha: 0.7),
+                                    color: colorScheme.onSurface.withValues(alpha: 0.4),
                                     size: 20,
                                   ),
                                 ],
@@ -189,32 +185,40 @@ color: Colors.white.withValues(alpha: 0.3),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 24),
-                    Container(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          _buildModernStatItem(
-                            context.watch<ClothingProvider>().activeClothing.length.toString(),
-                            '衣橱总数',
-                            Icons.checkroom_outlined,
-                          ),
-                          Container(
-                            width: 1,
-                            height: 40,
-                            color: Colors.white.withValues(alpha: 0.3),
-                          ),
-                          _buildModernStatItem(
-                            context.watch<ClothingProvider>().idleClothing.length.toString(),
-                            '闲置件数',
-                            Icons.archive_outlined,
-                          ),
-                        ],
+const SizedBox(height: 24),
+                    GestureDetector(
+                      onTap: () => widget.onNavigateToWardrobeTab?.call(0),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        decoration: BoxDecoration(
+                          color: colorScheme.primaryContainer.withValues(alpha: 0.5),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            _buildModernStatItem(
+                              context.watch<ClothingProvider>().activeClothing.length.toString(),
+                              '衣橱总数',
+                              Icons.checkroom_outlined,
+                              colorScheme,
+                            ),
+                            Container(
+                              width: 1,
+                              height: 40,
+                              color: colorScheme.onSurface.withValues(alpha: 0.1),
+                            ),
+                            GestureDetector(
+                              onTap: () => widget.onNavigateToWardrobeTab?.call(1),
+                              child: _buildModernStatItem(
+                                context.watch<ClothingProvider>().idleClothing.length.toString(),
+                                '闲置件数',
+                                Icons.archive_outlined,
+                                colorScheme,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ],
@@ -295,7 +299,7 @@ color: Colors.white.withValues(alpha: 0.3),
     );
   }
 
-  Widget _buildModernStatItem(String value, String label, IconData icon) {
+  Widget _buildModernStatItem(String value, String label, IconData icon, ColorScheme colorScheme) {
     return Column(
       children: [
         Row(
@@ -303,22 +307,22 @@ color: Colors.white.withValues(alpha: 0.3),
           children: [
             Text(
               value,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 28,
                 fontWeight: FontWeight.bold,
-                color: Colors.white,
+                color: colorScheme.primary,
               ),
             ),
             const SizedBox(width: 8),
-            Icon(icon, color: Colors.white.withValues(alpha: 0.8), size: 20),
+            Icon(icon, color: colorScheme.primary, size: 20),
           ],
         ),
         const SizedBox(height: 4),
         Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 13,
-            color: Colors.white70,
+            color: colorScheme.onSurface.withValues(alpha: 0.6),
           ),
         ),
       ],

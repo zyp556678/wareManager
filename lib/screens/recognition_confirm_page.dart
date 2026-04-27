@@ -17,12 +17,14 @@ class _RecognitionConfirmPageState extends State<RecognitionConfirmPage> {
   String _category = '上衣';
   String _material = '棉';
   String _style = '休闲';
+  String _season = '四季';
   final List<String> _tags = [];
   final TextEditingController _tagController = TextEditingController();
 
   final List<String> _categories = ['上衣', '裤子', '裙装', '外套', '鞋子', '配饰'];
   final List<String> _materials = ['棉', '麻', '丝', '羊毛', '涤纶', '牛仔'];
   final List<String> _styles = ['休闲', '商务', '运动', '复古', '简约', '时尚'];
+  final List<String> _seasons = ['四季', '春季', '夏季', '秋季', '冬季', '春秋', '春秋冬'];
 
   void _addTag() {
     if (_tagController.text.isNotEmpty) {
@@ -69,6 +71,10 @@ class _RecognitionConfirmPageState extends State<RecognitionConfirmPage> {
                     initialDate: DateTime.now().add(const Duration(days: 30)),
                     firstDate: DateTime.now(),
                     lastDate: DateTime.now().add(const Duration(days: 365)),
+                    locale: const Locale('zh', 'CN'),
+                    helpText: '选择闲置开始日期',
+                    confirmText: '确认',
+                    cancelText: '取消',
                   );
                   if (date != null) {
                     setModalState(() {
@@ -177,6 +183,7 @@ class _RecognitionConfirmPageState extends State<RecognitionConfirmPage> {
       color: '默认',
       material: _material,
       style: _style,
+      season: _season,
       customTags: _tags,
       createdDate: DateTime.now(),
     );
@@ -297,6 +304,27 @@ class _RecognitionConfirmPageState extends State<RecognitionConfirmPage> {
                           if (selected) {
                             setState(() {
                               _style = style;
+                            });
+                          }
+                        },
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // 季节选择
+                  const Text('季节', style: TextStyle(fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    children: _seasons.map((season) {
+                      return ChoiceChip(
+                        label: Text(season),
+                        selected: _season == season,
+                        onSelected: (selected) {
+                          if (selected) {
+                            setState(() {
+                              _season = season;
                             });
                           }
                         },
