@@ -2,7 +2,7 @@ name: wearwise
 description: "穿戴管家 - 跨平台衣橱管理App"
 publish_to: 'none'
 
-version: 1.0.1+3
+version: 2.0.0+1
 
 environment:
   sdk: ^3.11.5
@@ -41,6 +41,15 @@ dependencies:
   shared_preferences: ^2.2.2
   geolocator: ^12.0.0
   geocoding: ^3.0.0
+  
+  # 液态玻璃效果
+  liquid_glass_easy: ^1.1.1
+  
+  # HTTP 请求
+  http: ^1.2.0
+  
+  # HTML 解析
+  html: ^0.15.4
 
 dev_dependencies:
   flutter_test:

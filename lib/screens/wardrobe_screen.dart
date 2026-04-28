@@ -26,7 +26,7 @@ class WardrobeScreenState extends State<WardrobeScreen> with SingleTickerProvide
     super.initState();
     _tabController = TabController(length: 3, vsync: this, initialIndex: widget.initialTab);
     _tabController.addListener(() {
-      setState(() {});
+      if (!_tabController.indexIsChanging) setState(() {});
     });
   }
 
@@ -38,34 +38,84 @@ class WardrobeScreenState extends State<WardrobeScreen> with SingleTickerProvide
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final cs = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final tabs = ['衣橱', '闲置', '日志'];
 
     return Scaffold(
-      backgroundColor: colorScheme.surface,
-      appBar: AppBar(
-        title: const Text('我的衣橱'),
-        elevation: 0,
-        bottom: TabBar(
-          controller: _tabController,
-          labelColor: colorScheme.primary,
-          unselectedLabelColor: colorScheme.onSurface.withValues(alpha: 0.5),
-          indicatorColor: colorScheme.primary,
-          indicatorWeight: 3,
-          labelStyle: const TextStyle(fontWeight: FontWeight.w600),
-          tabs: const [
-            Tab(text: '衣橱'),
-            Tab(text: '闲置'),
-            Tab(text: '日志'),
+      body: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+              child: Row(
+                children: [
+                  Text(
+                    '我的衣橱',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: cs.onSurface,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: isDark ? cs.secondary.withValues(alpha: 0.2) : cs.secondary.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: isDark ? Colors.white.withValues(alpha: 0.1) : Colors.white.withValues(alpha: 0.4),
+                    width: 1,
+                  ),
+                ),
+                child: Row(
+                  children: List.generate(tabs.length, (index) {
+                    final isSelected = _tabController.index == index;
+                    return Expanded(
+                      child: GestureDetector(
+                        onTap: () => _tabController.animateTo(index),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 250),
+                          curve: Curves.easeInOut,
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          decoration: BoxDecoration(
+                            color: isSelected ? cs.primary.withValues(alpha: 0.15) : Colors.transparent,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Text(
+                            tabs[index],
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                              color: isSelected ? cs.primary : cs.onSurface.withValues(alpha: 0.5),
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  }),
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Expanded(
+              child: TabBarView(
+                controller: _tabController,
+                children: const [
+                  WardrobeTab(),
+                  IdleTab(),
+                  OutfitLogTab(),
+                ],
+              ),
+            ),
           ],
         ),
-      ),
-      body: TabBarView(
-        controller: _tabController,
-        children: const [
-          WardrobeTab(),
-          IdleTab(),
-          OutfitLogTab(),
-        ],
       ),
     );
   }

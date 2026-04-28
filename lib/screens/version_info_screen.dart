@@ -1,37 +1,41 @@
 import 'package:flutter/material.dart';
+import '../widgets/glass_card.dart';
 
 class VersionInfoScreen extends StatelessWidget {
   const VersionInfoScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final versions = [
+      {
+        'version': '2.0.0',
+        'date': '2026-04-28',
+        'content': [
+          '天气模块重构：改用 Open-Meteo API（免费、无需 Key）',
+          '天气默认基于定位获取，支持手动切换城市',
+          '天气预报扩展至 7 天',
+          '相机界面新增放大功能（双指捏合/双击切换/预设档位/滑动条）',
+          '相机界面支持调用系统相机拍照',
+          '地点管理支持地址显示与编辑',
+          '修复缓存清理逻辑，确保数据正确清除',
+          '主题模式默认跟随系统',
+          '全新液态玻璃 UI 设计',
+          'Bento Grid 首页布局',
+          '悬浮玻璃导航栏',
+          '全新5套主题配色（冰川蓝/翡翠绿/玫瑰金/星空紫/月光银）',
+        ],
+      },
       {
         'version': '1.0.1+4',
         'date': '2026-04-27',
         'content': [
-          '新增五组主题配色（晨间燕麦、海盐薄荷、摩卡拿铁、薰衣草灰、极简石墨）',
-          '新增主题配色选择页面，带实时预览效果',
-          '新增深色模式支持（浅色/深色/跟随系统三档）',
-          '新增操作日志功能，记录所有衣物操作',
-          '新增毛玻璃 UI 组件（GlassCard/GlassButton）',
-          '新增照片确认页面',
-          '导航栏升级为 Material 3 NavigationBar',
-          '地点管理支持 GPS 定位',
-          '衣橱Tab 支持品类筛选',
-          '闲置Tab 支持左滑唤醒',
-        ],
-      },
-      {
-        'version': '1.0.1+3',
-        'date': '2026-04-27',
-        'content': [
-          '新增五组主题配色切换',
+          '新增五组主题配色',
           '新增深色模式支持',
-          '重构现代化拍照界面（V2.0）',
+          '新增操作日志功能',
           '新增毛玻璃 UI 组件',
-          '全局毛玻璃底部导航',
-          '修复代码问题',
+          '导航栏升级为 Material 3',
+          '地点管理支持 GPS 定位',
         ],
       },
       {
@@ -41,99 +45,55 @@ class VersionInfoScreen extends StatelessWidget {
           '项目基础架构',
           '底部导航与四个主页面',
           '相机拍照与相册选择',
-          '识别确认页表单',
           '数据模型与数据库',
         ],
       },
     ];
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('版本说明'),
-        centerTitle: true,
-      ),
-      body: ListView.builder(
+      appBar: AppBar(title: const Text('版本说明')),
+      body: ListView.separated(
         padding: const EdgeInsets.all(16),
         itemCount: versions.length,
+        separatorBuilder: (context, index) => const SizedBox(height: 12),
         itemBuilder: (context, index) {
           final item = versions[index];
           final isLatest = index == 0;
 
-          return Card(
-            margin: const EdgeInsets.only(bottom: 16),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Text(
-                        'v${item['version']}',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: isLatest
-                              ? Theme.of(context).colorScheme.primary
-                              : Theme.of(context).colorScheme.onSurface,
-                        ),
-                      ),
-                      if (isLatest) ...[
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.primary,
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: const Text(
-                            '最新',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ],
-                      const Spacer(),
-                      Text(
-                        item['date'] as String,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey,
-                        ),
+          return GlassCard(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text('v${item['version']}', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: isLatest ? cs.primary : cs.onSurface)),
+                    if (isLatest) ...[
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(color: cs.primary, borderRadius: BorderRadius.circular(6)),
+                        child: const Text('最新', style: TextStyle(fontSize: 11, color: Colors.white, fontWeight: FontWeight.w600)),
                       ),
                     ],
-                  ),
-                  const SizedBox(height: 12),
-                  ...(item['content'] as List<String>).map(
-                    (content) => Padding(
-                      padding: const EdgeInsets.only(bottom: 4),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '• ',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Theme.of(context).colorScheme.primary,
-                            ),
-                          ),
-                          Expanded(
-                            child: Text(
-                              content,
-                              style: const TextStyle(fontSize: 14),
-                            ),
-                          ),
-                        ],
-                      ),
+                    const Spacer(),
+                    Text(item['date'] as String, style: TextStyle(fontSize: 13, color: cs.onSurface.withValues(alpha: 0.5))),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                ...(item['content'] as List<String>).map(
+                  (content) => Padding(
+                    padding: const EdgeInsets.only(bottom: 6),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('• ', style: TextStyle(fontSize: 14, color: cs.primary)),
+                        Expanded(child: Text(content, style: const TextStyle(fontSize: 14))),
+                      ],
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           );
         },

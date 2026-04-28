@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/clothing_provider.dart';
+import '../widgets/glass_card.dart';
 
 class OutfitLogTab extends StatefulWidget {
   const OutfitLogTab({super.key});
@@ -13,14 +14,11 @@ class _OutfitLogTabState extends State<OutfitLogTab> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<ClothingProvider>().loadClothingItems();
-    });
   }
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final cs = Theme.of(context).colorScheme;
 
     return Consumer<ClothingProvider>(
       builder: (context, provider, child) {
@@ -31,78 +29,60 @@ class _OutfitLogTabState extends State<OutfitLogTab> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
-                  Icons.history,
-                  size: 64,
-                  color: Colors.grey[400],
+                Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: cs.primary.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(Icons.history, size: 56, color: cs.primary.withValues(alpha: 0.6)),
                 ),
                 const SizedBox(height: 16),
                 Text(
                   '暂无操作记录',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey[600],
-                  ),
+                  style: TextStyle(fontSize: 16, color: cs.onSurface.withValues(alpha: 0.6)),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   '您的操作历史将显示在这里',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[500],
-                  ),
+                  style: TextStyle(fontSize: 14, color: cs.onSurface.withValues(alpha: 0.4)),
                 ),
               ],
             ),
           );
         }
 
-        return ListView.builder(
-          padding: const EdgeInsets.all(16),
+        return ListView.separated(
+          padding: const EdgeInsets.fromLTRB(12, 8, 12, 16),
           itemCount: logs.length,
+          separatorBuilder: (context, index) => const SizedBox(height: 10),
           itemBuilder: (context, index) {
             final log = logs[index];
-            return _buildLogItem(log, colorScheme);
+            return _buildLogItem(log, cs);
           },
         );
       },
     );
   }
 
-  Widget _buildLogItem(dynamic log, ColorScheme colorScheme) {
+  Widget _buildLogItem(dynamic log, ColorScheme cs) {
     final iconData = _getOperationIcon(log.type);
     final color = _getOperationColor(log.type);
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
+    return GlassCard(
+      padding: const EdgeInsets.all(14),
       child: Row(
         children: [
           Container(
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.1),
+              color: color.withValues(alpha: 0.15),
               shape: BoxShape.circle,
             ),
-            child: Icon(
-              iconData,
-              color: color,
-              size: 24,
-            ),
+            child: Icon(iconData, color: color, size: 24),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -110,39 +90,30 @@ class _OutfitLogTabState extends State<OutfitLogTab> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      log.operationText,
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 15,
-                        color: colorScheme.onSurface,
+                    Expanded(
+                      child: Text(
+                        log.operationText,
+                        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     Text(
                       _formatDate(log.createdAt),
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: colorScheme.onSurface.withValues(alpha: 0.5),
-                      ),
+                      style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.5)),
                     ),
                   ],
                 ),
                 const SizedBox(height: 4),
                 Text(
                   log.clothingName ?? '',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: colorScheme.onSurface.withValues(alpha: 0.7),
-                  ),
+                  style: TextStyle(fontSize: 13, color: cs.onSurface.withValues(alpha: 0.6)),
                 ),
                 if (log.extra != null && log.extra!.isNotEmpty) ...[
                   const SizedBox(height: 4),
                   Text(
                     log.extra!,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: colorScheme.onSurface.withValues(alpha: 0.5),
-                    ),
+                    style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.4)),
                   ),
                 ],
               ],

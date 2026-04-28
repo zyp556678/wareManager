@@ -13,9 +13,9 @@ class GlassButton extends StatefulWidget {
     super.key,
     required this.child,
     this.onTap,
-    this.borderRadius = 16,
+    this.borderRadius = 14,
     this.backgroundColor,
-    this.padding = const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+    this.padding = const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
     this.isSelected = false,
   });
 
@@ -35,7 +35,7 @@ class _GlassButtonState extends State<GlassButton>
       duration: const Duration(milliseconds: 150),
       vsync: this,
     );
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.95).animate(
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.96).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
     );
   }
@@ -61,14 +61,14 @@ class _GlassButtonState extends State<GlassButton>
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final cs = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bgColor = widget.backgroundColor ??
         (widget.isSelected
-            ? colorScheme.primary.withValues(alpha: 0.9)
+            ? cs.primary.withValues(alpha: 0.9)
             : (isDark
-                ? Colors.white.withValues(alpha: 0.1)
-                : colorScheme.onSurface.withValues(alpha: 0.08)));
+                ? Colors.white.withValues(alpha: 0.08)
+                : cs.secondary.withValues(alpha: 0.4)));
 
     return GestureDetector(
       onTap: widget.onTap,
@@ -92,17 +92,24 @@ class _GlassButtonState extends State<GlassButton>
                 ? null
                 : Border.all(
                     color: isDark
-                        ? Colors.white.withValues(alpha: 0.1)
-                        : Colors.white.withValues(alpha: 0.3),
-                    width: 1,
+                        ? Colors.white.withValues(alpha: 0.15)
+                        : Colors.white.withValues(alpha: 0.5),
+                    width: 1.5,
                   ),
+            boxShadow: widget.isSelected
+                ? [
+                    BoxShadow(
+                      color: cs.primary.withValues(alpha: 0.3),
+                      blurRadius: 16,
+                      offset: const Offset(0, 4),
+                    ),
+                  ]
+                : null,
           ),
           child: DefaultTextStyle(
             style: TextStyle(
-              color: widget.isSelected
-                  ? colorScheme.onPrimary
-                  : colorScheme.onSurface,
-              fontWeight: FontWeight.w500,
+              color: widget.isSelected ? cs.onPrimary : cs.onSurface,
+              fontWeight: FontWeight.w600,
             ),
             child: widget.child,
           ),
@@ -123,7 +130,7 @@ class GlassIconButton extends StatefulWidget {
     super.key,
     required this.icon,
     this.onTap,
-    this.size = 44,
+    this.size = 48,
     this.iconColor,
     this.isSelected = false,
   });
@@ -135,12 +142,13 @@ class GlassIconButton extends StatefulWidget {
 class _GlassIconButtonState extends State<GlassIconButton> {
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final cs = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final bgColor = widget.isSelected
-        ? colorScheme.primary.withValues(alpha: 0.9)
-        : colorScheme.onSurface.withValues(alpha: 0.1);
+        ? cs.primary.withValues(alpha: 0.9)
+        : (isDark ? Colors.white.withValues(alpha: 0.08) : cs.secondary.withValues(alpha: 0.4));
     final iColor = widget.iconColor ??
-        (widget.isSelected ? colorScheme.onPrimary : colorScheme.onSurface);
+        (widget.isSelected ? cs.onPrimary : cs.onSurface);
 
     return GestureDetector(
       onTap: () {
@@ -153,6 +161,10 @@ class _GlassIconButtonState extends State<GlassIconButton> {
         decoration: BoxDecoration(
           color: bgColor,
           shape: BoxShape.circle,
+          border: Border.all(
+            color: isDark ? Colors.white.withValues(alpha: 0.15) : Colors.white.withValues(alpha: 0.5),
+            width: 1.5,
+          ),
         ),
         child: Icon(
           widget.icon,

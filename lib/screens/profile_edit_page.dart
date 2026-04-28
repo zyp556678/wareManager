@@ -2,6 +2,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../widgets/glass_card.dart';
+import '../utils/image_utils.dart';
 
 class ProfileEditPage extends StatefulWidget {
   const ProfileEditPage({super.key});
@@ -30,68 +32,49 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
   }
 
   Future<void> _pickImage() async {
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(
+    final pickedFile = await ImagePicker().pickImage(
       source: ImageSource.gallery,
       imageQuality: 80,
       maxWidth: 512,
       maxHeight: 512,
     );
-
-    if (pickedFile != null) {
-      setState(() {
-        _avatarPath = pickedFile.path;
-      });
-    }
+    if (pickedFile != null) setState(() => _avatarPath = pickedFile.path);
   }
 
   Future<void> _takePhoto() async {
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(
+    final pickedFile = await ImagePicker().pickImage(
       source: ImageSource.camera,
       imageQuality: 80,
       maxWidth: 512,
       maxHeight: 512,
     );
-
-    if (pickedFile != null) {
-      setState(() {
-        _avatarPath = pickedFile.path;
-      });
-    }
+    if (pickedFile != null) setState(() => _avatarPath = pickedFile.path);
   }
 
   Future<void> _saveProfile() async {
     if (_usernameController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('请输入用户名')),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('请输入用户名')));
       return;
     }
 
     setState(() => _isLoading = true);
-
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('username', _usernameController.text.trim());
-      
       if (_avatarPath != null) {
-        await prefs.setString('avatar_path', _avatarPath!);
+        final savedPath = await saveImageToAppDir(_avatarPath!);
+        await prefs.setString('avatar_path', savedPath);
       }
 
       if (mounted) {
         setState(() => _isLoading = false);
-        Navigator.pop(context, true); // 返回 true 表示已更新
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('保存成功')),
-        );
+        Navigator.pop(context, true);
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('保存成功')));
       }
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('保存失败: $e')),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('保存失败: $e')));
       }
     }
   }
@@ -99,36 +82,20 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
   void _showImageSourceDialog() {
     showModalBottomSheet(
       context: context,
-      builder: (context) => SafeArea(
+      backgroundColor: Colors.transparent,
+      builder: (context) => GlassCard(
+        margin: const EdgeInsets.all(16),
+        padding: EdgeInsets.zero,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            ListTile(
-              leading: const Icon(Icons.photo_library),
-              title: const Text('从相册选择'),
-              onTap: () {
-                Navigator.pop(context);
-                _pickImage();
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.camera_alt),
-              title: const Text('拍照'),
-              onTap: () {
-                Navigator.pop(context);
-                _takePhoto();
-              },
-            ),
+            ListTile(leading: const Icon(Icons.photo_library), title: const Text('从相册选择'), onTap: () { Navigator.pop(context); _pickImage(); }),
+            ListTile(leading: const Icon(Icons.camera_alt), title: const Text('拍照'), onTap: () { Navigator.pop(context); _takePhoto(); }),
             if (_avatarPath != null)
               ListTile(
                 leading: const Icon(Icons.delete, color: Colors.red),
                 title: const Text('删除头像', style: TextStyle(color: Colors.red)),
-                onTap: () {
-                  Navigator.pop(context);
-                  setState(() {
-                    _avatarPath = null;
-                  });
-                },
+                onTap: () { Navigator.pop(context); setState(() => _avatarPath = null); },
               ),
           ],
         ),
@@ -138,7 +105,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
       appBar: AppBar(
@@ -147,55 +114,30 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
           TextButton(
             onPressed: _isLoading ? null : _saveProfile,
             child: _isLoading
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Text('保存'),
+                ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                : const Text('保存', style: TextStyle(fontWeight: FontWeight.w600)),
           ),
         ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(20),
         child: Column(
           children: [
-            // 头像区域
             GestureDetector(
               onTap: _showImageSourceDialog,
               child: Stack(
                 children: [
                   Container(
-                    width: 120,
-                    height: 120,
+                    width: 110,
+                    height: 110,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      border: Border.all(
-                        color: colorScheme.primary,
-                        width: 3,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: colorScheme.primary.withValues(alpha: 0.3),
-                          blurRadius: 20,
-                          offset: const Offset(0, 10),
-                        ),
-                      ],
+                      border: Border.all(color: cs.primary.withValues(alpha: 0.3), width: 3),
                     ),
                     child: ClipOval(
                       child: _avatarPath != null && _avatarPath!.isNotEmpty
-                          ? Image.file(
-                              File(_avatarPath!),
-                              fit: BoxFit.cover,
-                            )
-                          : Container(
-                              color: colorScheme.primaryContainer,
-                              child: Icon(
-                                Icons.person,
-                                size: 60,
-                                color: colorScheme.onPrimaryContainer,
-                              ),
-                            ),
+                          ? Image.file(File(_avatarPath!), fit: BoxFit.cover)
+                          : Container(color: cs.primaryContainer, child: Icon(Icons.person, size: 56, color: cs.onPrimaryContainer)),
                     ),
                   ),
                   Positioned(
@@ -203,100 +145,44 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
                     right: 0,
                     child: Container(
                       padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: colorScheme.primary,
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: colorScheme.surface,
-                          width: 3,
-                        ),
-                      ),
-                      child: const Icon(
-                        Icons.camera_alt,
-                        color: Colors.white,
-                        size: 20,
-                      ),
+                      decoration: BoxDecoration(color: cs.primary, shape: BoxShape.circle, border: Border.all(color: cs.surface, width: 3)),
+                      child: const Icon(Icons.camera_alt, color: Colors.white, size: 18),
                     ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 12),
-            Text(
-              '点击更换头像',
-              style: TextStyle(
-                fontSize: 14,
-                color: colorScheme.primary,
+            const SizedBox(height: 10),
+            Text('点击更换头像', style: TextStyle(fontSize: 13, color: cs.primary)),
+            const SizedBox(height: 36),
+            GlassCard(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('用户名', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: cs.onSurface.withValues(alpha: 0.7))),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: _usernameController,
+                    maxLength: 20,
+                    decoration: const InputDecoration(hintText: '请输入用户名', prefixIcon: Icon(Icons.person_outline), counterText: ''),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 40),
-
-            // 用户名输入
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '用户名',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: colorScheme.onSurface.withValues(alpha: 0.7),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: _usernameController,
-                  maxLength: 20,
-                  decoration: InputDecoration(
-                    hintText: '请输入用户名',
-                    prefixIcon: const Icon(Icons.person_outline),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 16,
-                    ),
-                    counterText: '', // 隐藏字符计数
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  '最多20个字符',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: colorScheme.onSurface.withValues(alpha: 0.5),
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 40),
-
-            // 提示信息
+            const SizedBox(height: 20),
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: colorScheme.primaryContainer.withValues(alpha: 0.3),
-                borderRadius: BorderRadius.circular(12),
+                color: cs.primary.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: cs.primary.withValues(alpha: 0.15)),
               ),
               child: Row(
                 children: [
-                  Icon(
-                    Icons.info_outline,
-                    color: colorScheme.primary,
-                    size: 20,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      '头像和用户名将显示在"我的"页面顶部',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: colorScheme.onSurface.withValues(alpha: 0.8),
-                      ),
-                    ),
-                  ),
+                  Icon(Icons.info_outline, color: cs.primary, size: 18),
+                  const SizedBox(width: 10),
+                  Expanded(child: Text('头像和用户名将显示在"我的"页面顶部', style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.7)))),
                 ],
               ),
             ),

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/clothing_item.dart';
 import '../providers/clothing_provider.dart';
+import '../utils/image_utils.dart';
 
 class RecognitionConfirmPage extends StatefulWidget {
   final String imagePath;
@@ -177,8 +178,9 @@ class _RecognitionConfirmPageState extends State<RecognitionConfirmPage> {
   }
 
   Future<void> _saveToWardrobe() async {
+    final savedPath = await saveImageToAppDir(widget.imagePath);
     final clothingItem = ClothingItem(
-      imagePath: widget.imagePath,
+      imagePath: savedPath,
       category: _category,
       color: '默认',
       material: _material,

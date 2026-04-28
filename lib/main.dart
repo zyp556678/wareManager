@@ -8,6 +8,9 @@ import 'screens/wardrobe_screen.dart';
 import 'screens/profile_screen.dart';
 import 'providers/clothing_provider.dart';
 import 'providers/theme_provider.dart';
+import 'providers/weather_provider.dart';
+
+import 'widgets/glass_nav_bar.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -43,6 +46,7 @@ class WearWiseApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => ClothingProvider()),
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        ChangeNotifierProvider(create: (_) => WeatherProvider()..loadFromPrefs()),
       ],
       child: Consumer<ThemeProvider>(
         builder: (context, themeProvider, _) {
@@ -78,123 +82,81 @@ class MainScreen extends StatefulWidget {
 
 class MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
-  late PageController _pageController;
   final GlobalKey<WardrobeScreenState> _wardrobeKey = GlobalKey<WardrobeScreenState>();
-  int? _pendingWardrobeTab;
+  late final List<Widget> _screens;
 
   void setTabIndex(int index) {
-    final navIndex = index > 1 ? index + 1 : index;
-    _pageController.animateToPage(
-      navIndex,
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
-    );
-    setState(() {
-      _currentIndex = index;
-    });
+    // 导航栏索引: 0=首页, 1=衣橱, 2=录入(路由), 3=我的
+    if (index == 2) {
+      Navigator.push(context, MaterialPageRoute(builder: (_) => const CaptureScreen()));
+      return;
+    }
+    setState(() => _currentIndex = index);
   }
 
   void setWardrobeTab(int tabIndex) {
-    _pendingWardrobeTab = tabIndex;
-    if (_currentIndex != 1) {
-      setTabIndex(1);
-    }
-    Future.delayed(const Duration(milliseconds: 400), () {
-      _wardrobeKey.currentState?.switchToTab(tabIndex);
-      _pendingWardrobeTab = null;
-    });
+    setState(() => _currentIndex = 1);
+    _wardrobeKey.currentState?.switchToTab(tabIndex);
   }
 
   @override
   void initState() {
     super.initState();
-    _pageController = PageController(initialPage: 0);
-  }
-
-  List<Widget> get _screens => [
-    HomeScreen(onNavigateToTab: setTabIndex),
-    WardrobeScreen(key: _wardrobeKey),
-    ProfileScreen(onNavigateToTab: setTabIndex, onNavigateToWardrobeTab: setWardrobeTab),
-  ];
-
-  @override
-  void dispose() {
-    _pageController.dispose();
-    super.dispose();
+    _screens = [
+      HomeScreen(
+        onNavigateToTab: setTabIndex,
+        onNavigateToWardrobeTab: setWardrobeTab,
+      ),
+      WardrobeScreen(key: _wardrobeKey),
+      ProfileScreen(
+        onNavigateToTab: setTabIndex,
+        onNavigateToWardrobeTab: setWardrobeTab,
+      ),
+    ];
   }
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    
     return Scaffold(
-      body: PageView(
-        controller: _pageController,
-        onPageChanged: (index) {
-          final navIndex = index < 2 ? index : index + 1;
-          setState(() {
-            _currentIndex = navIndex;
-          });
-          if (index == 1 && _pendingWardrobeTab != null) {
-            Future.delayed(const Duration(milliseconds: 100), () {
-              _wardrobeKey.currentState?.switchToTab(_pendingWardrobeTab!);
-              _pendingWardrobeTab = null;
-            });
-          }
-        },
+      body: IndexedStack(
+        index: _currentIndex > 2 ? _currentIndex - 1 : _currentIndex,
         children: _screens,
       ),
-      bottomNavigationBar: Container(
-            decoration: BoxDecoration(
-              color: colorScheme.surface,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, -2),
-                ),
-              ],
-            ),
-            child: NavigationBar(
-              height: 72,
-              selectedIndex: _currentIndex,
-              onDestinationSelected: (index) {
-                if (index == 2) {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const CaptureScreen()),
-                  );
-                } else {
-                  setTabIndex(index);
-                }
-              },
-              backgroundColor: Colors.transparent,
-              elevation: 0,
-              indicatorColor: colorScheme.primary.withValues(alpha: 0.1),
-              destinations: [
-                NavigationDestination(
-                  icon: Icon(Icons.home_outlined, color: Colors.grey[600]),
-                  selectedIcon: Icon(Icons.home, color: colorScheme.primary),
-                  label: '首页',
-                ),
-                NavigationDestination(
-                  icon: Icon(Icons.checkroom_outlined, color: Colors.grey[600]),
-                  selectedIcon: Icon(Icons.checkroom, color: colorScheme.primary),
-                  label: '衣橱',
-                ),
-                NavigationDestination(
-                  icon: Icon(Icons.add_circle_outline, color: Colors.grey[600]),
-                  selectedIcon: Icon(Icons.add_circle, color: colorScheme.primary),
-                  label: '录入',
-                ),
-                NavigationDestination(
-                  icon: Icon(Icons.person_outline, color: Colors.grey[600]),
-                  selectedIcon: Icon(Icons.person, color: colorScheme.primary),
-                  label: '我的',
-                ),
-              ],
-            ),
+      bottomNavigationBar: GlassNavBar(
+        currentIndex: _currentIndex,
+        onTap: (index) {
+          if (index == 2) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const CaptureScreen()),
+            );
+          } else {
+            setTabIndex(index);
+          }
+        },
+        items: const [
+          NavBarItem(
+            icon: Icons.home_outlined,
+            selectedIcon: Icons.home,
+            label: '首页',
           ),
+          NavBarItem(
+            icon: Icons.checkroom_outlined,
+            selectedIcon: Icons.checkroom,
+            label: '衣橱',
+          ),
+          NavBarItem(
+            icon: Icons.add_circle_outline,
+            selectedIcon: Icons.add_circle,
+            label: '录入',
+          ),
+          NavBarItem(
+            icon: Icons.person_outline,
+            selectedIcon: Icons.person,
+            label: '我的',
+          ),
+        ],
+      ),
     );
   }
 }

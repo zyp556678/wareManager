@@ -5,6 +5,8 @@ import '../models/clothing_item.dart';
 import '../models/operation_log.dart';
 import '../providers/clothing_provider.dart';
 import 'package:provider/provider.dart';
+import '../widgets/glass_card.dart';
+import '../utils/image_utils.dart';
 
 class EditClothingPage extends StatefulWidget {
   final ClothingItem item;
@@ -49,29 +51,23 @@ class _EditClothingPageState extends State<EditClothingPage> {
   }
 
   Future<void> _pickImage() async {
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 80,
-    );
-
-    if (pickedFile != null) {
-      setState(() {
-        _imagePath = pickedFile.path;
-      });
-    }
+    final pickedFile = await ImagePicker().pickImage(source: ImageSource.gallery, imageQuality: 80);
+    if (pickedFile != null) setState(() => _imagePath = pickedFile.path);
   }
 
   Future<void> _saveChanges() async {
     if (_categoryController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('请输入品类')),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('请输入品类')));
       return;
     }
 
+    String? finalImagePath = _imagePath;
+    if (_imagePath != null && _imagePath!.isNotEmpty && _imagePath != widget.item.imagePath) {
+      finalImagePath = await saveImageToAppDir(_imagePath!);
+    }
+
     final updatedItem = widget.item.copyWith(
-      imagePath: _imagePath ?? '',
+      imagePath: finalImagePath ?? '',
       category: _categoryController.text.trim(),
       color: _colorController.text.trim(),
       material: _materialController.text.trim(),
@@ -80,8 +76,6 @@ class _EditClothingPageState extends State<EditClothingPage> {
     );
 
     await context.read<ClothingProvider>().updateClothingItem(updatedItem);
-    
-    // 记录编辑日志
     await context.read<ClothingProvider>().addOperationLog(
       OperationLog(
         type: 'edit',
@@ -91,27 +85,22 @@ class _EditClothingPageState extends State<EditClothingPage> {
         createdAt: DateTime.now(),
       ),
     );
-    
+
     if (mounted) {
       Navigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('保存成功')),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('保存成功')));
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('编辑衣物'),
         actions: [
-          TextButton(
-            onPressed: _saveChanges,
-            child: const Text('保存'),
-          ),
+          TextButton(onPressed: _saveChanges, child: const Text('保存', style: TextStyle(fontWeight: FontWeight.w600))),
         ],
       ),
       body: SingleChildScrollView(
@@ -119,118 +108,69 @@ class _EditClothingPageState extends State<EditClothingPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 图片区域
             Center(
               child: GestureDetector(
                 onTap: _pickImage,
                 child: Container(
-                  width: 200,
-                  height: 200,
+                  width: 180,
+                  height: 180,
                   decoration: BoxDecoration(
-                    color: colorScheme.surfaceContainerHighest,
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: colorScheme.primary.withValues(alpha: 0.3),
-                      width: 2,
-                    ),
+                    border: Border.all(color: cs.primary.withValues(alpha: 0.3), width: 2),
                   ),
-                  child: _imagePath != null && _imagePath!.isNotEmpty
-                      ? ClipRRect(
-                          borderRadius: BorderRadius.circular(18),
-                          child: Image.file(
-                            File(_imagePath!),
-                            fit: BoxFit.cover,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(18),
+                    child: _imagePath != null && _imagePath!.isNotEmpty
+                        ? Image.file(File(_imagePath!), fit: BoxFit.cover)
+                        : Container(
+                            color: cs.secondary.withValues(alpha: 0.3),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.add_photo_alternate_outlined, size: 48, color: cs.primary),
+                                const SizedBox(height: 8),
+                                Text('点击更换图片', style: TextStyle(color: cs.primary, fontSize: 13)),
+                              ],
+                            ),
                           ),
-                        )
-                      : Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.add_photo_alternate_outlined,
-                              size: 50,
-                              color: colorScheme.primary,
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              '点击更换图片',
-                              style: TextStyle(
-                                color: colorScheme.primary,
-                                fontSize: 14,
-                              ),
-                            ),
-                          ],
-                        ),
+                  ),
                 ),
               ),
             ),
             const SizedBox(height: 24),
-
-            // 表单字段
-            _buildDropdownField(
-              label: '品类',
-              value: _categoryController.text,
-              items: _categories,
-              onChanged: (value) {
-                setState(() {
-                  _categoryController.text = value!;
-                });
-              },
+            GlassCard(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  _buildDropdownField(label: '品类', value: _categoryController.text, items: _categories, onChanged: (v) => setState(() => _categoryController.text = v!)),
+                  const SizedBox(height: 16),
+                  _buildTextField(label: '颜色', controller: _colorController, hint: '例如：白色、黑色'),
+                  const SizedBox(height: 16),
+                  _buildDropdownField(label: '材质', value: _materialController.text, items: _materials, onChanged: (v) => setState(() => _materialController.text = v!)),
+                  const SizedBox(height: 16),
+                  _buildDropdownField(label: '风格', value: _styleController.text, items: _styles, onChanged: (v) => setState(() => _styleController.text = v!)),
+                  const SizedBox(height: 16),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text('季节', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: cs.onSurface.withValues(alpha: 0.7))),
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    children: _seasons.map((season) {
+                      return ChoiceChip(
+                        label: Text(season),
+                        selected: _season == season,
+                        onSelected: (selected) {
+                          if (selected) setState(() => _season = season);
+                        },
+                      );
+                    }).toList(),
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 16),
-
-            _buildTextField(
-              label: '颜色',
-              controller: _colorController,
-              hint: '例如：白色、黑色',
-            ),
-            const SizedBox(height: 16),
-
-            _buildDropdownField(
-              label: '材质',
-              value: _materialController.text,
-              items: _materials,
-              onChanged: (value) {
-                setState(() {
-                  _materialController.text = value!;
-                });
-              },
-            ),
-            const SizedBox(height: 16),
-
-            _buildDropdownField(
-              label: '风格',
-              value: _styleController.text,
-              items: _styles,
-              onChanged: (value) {
-                setState(() {
-                  _styleController.text = value!;
-                });
-              },
-            ),
-            const SizedBox(height: 16),
-
-            // 季节选择
-            const Text('季节', style: TextStyle(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              children: _seasons.map((season) {
-                return ChoiceChip(
-                  label: Text(season),
-                  selected: _season == season,
-                  onSelected: (selected) {
-                    if (selected) {
-                      setState(() {
-                        _season = season;
-                      });
-                    }
-                  },
-                );
-              }).toList(),
-            ),
-            const SizedBox(height: 24),
-
-            // 删除按钮
+            const SizedBox(height: 20),
             SizedBox(
               width: double.infinity,
               child: OutlinedButton.icon(
@@ -238,9 +178,10 @@ class _EditClothingPageState extends State<EditClothingPage> {
                 label: const Text('删除衣物', style: TextStyle(color: Colors.red)),
                 style: OutlinedButton.styleFrom(
                   side: const BorderSide(color: Colors.red),
-                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                 ),
-                onPressed: () => _showDeleteConfirm(),
+                onPressed: _showDeleteConfirm,
               ),
             ),
           ],
@@ -249,64 +190,32 @@ class _EditClothingPageState extends State<EditClothingPage> {
     );
   }
 
-  Widget _buildTextField({
-    required String label,
-    required TextEditingController controller,
-    String? hint,
-  }) {
+  Widget _buildTextField({required String label, required TextEditingController controller, String? hint}) {
+    final cs = Theme.of(context).colorScheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
-          ),
-        ),
+        Text(label, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: cs.onSurface.withValues(alpha: 0.7))),
         const SizedBox(height: 8),
         TextField(
           controller: controller,
-          decoration: InputDecoration(
-            hintText: hint,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 12,
-            ),
-          ),
+          decoration: InputDecoration(hintText: hint, contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12)),
         ),
       ],
     );
   }
 
-  Widget _buildDropdownField({
-    required String label,
-    required String value,
-    required List<String> items,
-    required ValueChanged<String?> onChanged,
-  }) {
+  Widget _buildDropdownField({required String label, required String value, required List<String> items, required ValueChanged<String?> onChanged}) {
+    final cs = Theme.of(context).colorScheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
-          ),
-        ),
+        Text(label, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: cs.onSurface.withValues(alpha: 0.7))),
         const SizedBox(height: 8),
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          padding: const EdgeInsets.symmetric(horizontal: 14),
           decoration: BoxDecoration(
-            border: Border.all(
-              color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
-            ),
+            border: Border.all(color: cs.outline.withValues(alpha: 0.3)),
             borderRadius: BorderRadius.circular(12),
           ),
           child: DropdownButtonHideUnderline(
@@ -314,12 +223,7 @@ class _EditClothingPageState extends State<EditClothingPage> {
               value: items.contains(value) ? value : null,
               isExpanded: true,
               hint: Text('请选择$label'),
-              items: items.map((item) {
-                return DropdownMenuItem(
-                  value: item,
-                  child: Text(item),
-                );
-              }).toList(),
+              items: items.map((item) => DropdownMenuItem(value: item, child: Text(item))).toList(),
               onChanged: onChanged,
             ),
           ),
@@ -335,18 +239,8 @@ class _EditClothingPageState extends State<EditClothingPage> {
         title: const Text('删除衣物'),
         content: const Text('确定要删除这件衣物吗？此操作不可恢复。'),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('取消'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('删除'),
-          ),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('取消')),
+          ElevatedButton(onPressed: () => Navigator.pop(context, true), style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white), child: const Text('删除')),
         ],
       ),
     );
@@ -356,11 +250,7 @@ class _EditClothingPageState extends State<EditClothingPage> {
       if (mounted) {
         Navigator.pop(context);
         Navigator.pop(context);
-      }
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('已删除')),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('已删除')));
       }
     }
   }

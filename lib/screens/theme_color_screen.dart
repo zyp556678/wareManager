@@ -1,63 +1,43 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/theme_provider.dart';
+import '../widgets/glass_card.dart';
 
 class ThemeColorScreen extends StatelessWidget {
   const ThemeColorScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('主题配色'),
-      ),
+      appBar: AppBar(title: const Text('主题配色')),
       body: Consumer<ThemeProvider>(
-        builder: (context, themeProvider, _) {
-          return ListView.builder(
+        builder: (context, themeProvider, child) {
+          return ListView.separated(
             padding: const EdgeInsets.all(16),
             itemCount: ThemeProvider.colorNames.length,
+            separatorBuilder: (context, index) => const SizedBox(height: 12),
             itemBuilder: (context, index) {
               final isSelected = themeProvider.colorIndex == index;
               final colors = _getThemeColors(index);
 
               return GestureDetector(
                 onTap: () => themeProvider.setColorScheme(index),
-                child: Container(
-                  margin: const EdgeInsets.only(bottom: 16),
+                child: GlassCard(
                   padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: isDark ? const Color(0xFF2C2C2C) : Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    border: isSelected
-                        ? Border.all(color: colorScheme.primary, width: 2)
-                        : null,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.06),
-                        blurRadius: 12,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
                   child: Row(
                     children: [
                       Container(
-                        width: 60,
-                        height: 60,
+                        width: 56,
+                        height: 56,
                         decoration: BoxDecoration(
                           color: colors['primary'],
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(14),
                         ),
-                        child: Center(
-                          child: Icon(
-                            Icons.check,
-                            color: colors['onPrimary'],
-                            size: 28,
-                          ),
-                        ),
+                        child: isSelected
+                            ? Icon(Icons.check, color: colors['onPrimary'], size: 28)
+                            : null,
                       ),
                       const SizedBox(width: 16),
                       Expanded(
@@ -66,55 +46,22 @@ class ThemeColorScreen extends StatelessWidget {
                           children: [
                             Text(
                               ThemeProvider.colorNames[index],
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: colors['onSurface'],
-                              ),
+                              style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
                             ),
                             const SizedBox(height: 8),
                             Row(
                               children: [
-                                Container(
-                                  width: 32,
-                                  height: 20,
-                                  decoration: BoxDecoration(
-                                    color: colors['primary'],
-                                    borderRadius: BorderRadius.circular(4),
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Container(
-                                  width: 32,
-                                  height: 20,
-                                  decoration: BoxDecoration(
-                                    color: colors['secondary'],
-                                    borderRadius: BorderRadius.circular(4),
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Container(
-                                  width: 32,
-                                  height: 20,
-                                  decoration: BoxDecoration(
-                                    color: colors['surface'],
-                                    borderRadius: BorderRadius.circular(4),
-                                    border: Border.all(
-                                      color: colors['onSurface']!.withValues(alpha: 0.2),
-                                    ),
-                                  ),
-                                ),
+                                _colorDot(colors['primary']!),
+                                const SizedBox(width: 6),
+                                _colorDot(colors['secondary']!),
+                                const SizedBox(width: 6),
+                                _colorDot(colors['surface']!, borderColor: Colors.grey.withValues(alpha: 0.3)),
                               ],
                             ),
                           ],
                         ),
                       ),
-                      if (isSelected)
-                        Icon(
-                          Icons.check_circle,
-                          color: colorScheme.primary,
-                          size: 28,
-                        ),
+                      if (isSelected) Icon(Icons.check_circle, color: cs.primary, size: 26),
                     ],
                   ),
                 ),
@@ -126,53 +73,32 @@ class ThemeColorScreen extends StatelessWidget {
     );
   }
 
+  Widget _colorDot(Color color, {Color? borderColor}) {
+    return Container(
+      width: 28,
+      height: 28,
+      decoration: BoxDecoration(
+        color: color,
+        shape: BoxShape.circle,
+        border: Border.all(color: borderColor ?? Colors.transparent, width: 1),
+      ),
+    );
+  }
+
   Map<String, Color> _getThemeColors(int index) {
     switch (index) {
       case 0:
-        return {
-          'primary': const Color(0xFF64B5F6),
-          'onPrimary': Colors.white,
-          'secondary': const Color(0xFFE3F2FD),
-          'onSecondary': const Color(0xFF0D47A1),
-          'surface': const Color(0xFFFAFAFA),
-          'onSurface': const Color(0xFF37474F),
-        };
+        return {'primary': const Color(0xFF5B9BD5), 'onPrimary': Colors.white, 'secondary': const Color(0xFFE8F4FD), 'surface': const Color(0xFFF5F7FA)};
       case 1:
-        return {
-          'primary': const Color(0xFF81C784),
-          'onPrimary': Colors.white,
-          'secondary': const Color(0xFFE8F5E9),
-          'onSecondary': const Color(0xFF1B5E20),
-          'surface': const Color(0xFFFAFAFA),
-          'onSurface': const Color(0xFF37474F),
-        };
+        return {'primary': const Color(0xFF4CAF50), 'onPrimary': Colors.white, 'secondary': const Color(0xFFE8F5E9), 'surface': const Color(0xFFF5F7F5)};
       case 2:
-        return {
-          'primary': const Color(0xFFF48FB1),
-          'onPrimary': Colors.white,
-          'secondary': const Color(0xFFFCE4EC),
-          'onSecondary': const Color(0xFF880E4F),
-          'surface': const Color(0xFFFAFAFA),
-          'onSurface': const Color(0xFF37474F),
-        };
+        return {'primary': const Color(0xFFD4A574), 'onPrimary': Colors.white, 'secondary': const Color(0xFFFDF5EB), 'surface': const Color(0xFFFAF7F4)};
       case 3:
-        return {
-          'primary': const Color(0xFFBA68C8),
-          'onPrimary': Colors.white,
-          'secondary': const Color(0xFFF3E5F5),
-          'onSecondary': const Color(0xFF4A148C),
-          'surface': const Color(0xFFFAFAFA),
-          'onSurface': const Color(0xFF37474F),
-        };
+        return {'primary': const Color(0xFF9B7ED8), 'onPrimary': Colors.white, 'secondary': const Color(0xFFF3EEFA), 'surface': const Color(0xFFF7F5FC)};
+      case 4:
+        return {'primary': const Color(0xFF95A5A6), 'onPrimary': Colors.white, 'secondary': const Color(0xFFF0F2F3), 'surface': const Color(0xFFFAFBFC)};
       default:
-        return {
-          'primary': const Color(0xFF64B5F6),
-          'onPrimary': Colors.white,
-          'secondary': const Color(0xFFE3F2FD),
-          'onSecondary': const Color(0xFF0D47A1),
-          'surface': const Color(0xFFFAFAFA),
-          'onSurface': const Color(0xFF37474F),
-        };
+        return {'primary': const Color(0xFF5B9BD5), 'onPrimary': Colors.white, 'secondary': const Color(0xFFE8F4FD), 'surface': const Color(0xFFF5F7FA)};
     }
   }
 }

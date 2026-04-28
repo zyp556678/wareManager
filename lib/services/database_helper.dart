@@ -94,6 +94,7 @@ class DatabaseHelper {
         name $textType,
         type $textType,
         description TEXT,
+        address TEXT,
         createdAt $integerType
       )
     ''');

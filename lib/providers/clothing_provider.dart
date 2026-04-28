@@ -7,17 +7,21 @@ class ClothingProvider with ChangeNotifier {
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;
   List<ClothingItem> _clothingItems = [];
   List<OperationLog> _operationLogs = [];
+  List<ClothingItem> _activeClothing = [];
+  List<ClothingItem> _idleClothing = [];
   bool _isLoading = false;
 
   List<ClothingItem> get clothingItems => _clothingItems;
   List<OperationLog> get operationLogs => _operationLogs;
   bool get isLoading => _isLoading;
 
-  List<ClothingItem> get activeClothing =>
-      _clothingItems.where((item) => item.status == 'active').toList();
+  List<ClothingItem> get activeClothing => _activeClothing;
+  List<ClothingItem> get idleClothing => _idleClothing;
 
-  List<ClothingItem> get idleClothing =>
-      _clothingItems.where((item) => item.status == 'idle').toList();
+  void _rebuildCache() {
+    _activeClothing = _clothingItems.where((item) => item.status == 'active').toList();
+    _idleClothing = _clothingItems.where((item) => item.status == 'idle').toList();
+  }
 
   Future<void> loadClothingItems() async {
     _isLoading = true;
@@ -26,6 +30,8 @@ class ClothingProvider with ChangeNotifier {
     try {
       _clothingItems = await _dbHelper.getAllClothingItems();
       _operationLogs = await _dbHelper.getAllOperationLogs();
+      _activeClothing = _clothingItems.where((item) => item.status == 'active').toList();
+      _idleClothing = _clothingItems.where((item) => item.status == 'idle').toList();
     } catch (e) {
       debugPrint('Error loading data: $e');
     }
@@ -58,6 +64,7 @@ class ClothingProvider with ChangeNotifier {
       final id = await _dbHelper.createClothingItem(item);
       final newItem = item.copyWith(id: id);
       _clothingItems.insert(0, newItem);
+      _rebuildCache();
 
       await addOperationLog(OperationLog(
         type: 'add',
@@ -79,6 +86,7 @@ class ClothingProvider with ChangeNotifier {
       final index = _clothingItems.indexWhere((c) => c.id == item.id);
       if (index != -1) {
         _clothingItems[index] = item;
+        _rebuildCache();
         notifyListeners();
       }
     } catch (e) {
@@ -90,6 +98,7 @@ class ClothingProvider with ChangeNotifier {
     final item = _clothingItems.firstWhere((c) => c.id == id);
     await _dbHelper.deleteClothingItem(id);
     _clothingItems.removeWhere((c) => c.id == id);
+    _rebuildCache();
 
     await addOperationLog(OperationLog(
       type: 'delete',
