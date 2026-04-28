@@ -1,31 +1,35 @@
-v1.0.1+4 (2026-04-27)
+v2.0.0+1 (2026-04-28)
 
 Features:
-- 新增五组主题配色（晨间燕麦、海盐薄荷、摩卡拿铁、薰衣草灰、极简石墨）
-- 新增主题配色选择页面（ThemeColorScreen），带实时预览效果
-- 新增深色模式支持（浅色/深色/跟随系统三档）
-- 新增 VersionInfoScreen 版本说明页面
-- 新增操作日志功能（operation_logs表），记录 add/idle/wakeup/delete/edit 操作
-- 新增 GlassCard 毛玻璃卡片组件
-- 新增 GlassButton 毛玻璃按钮组件
-- 新增 PhotoConfirmScreen 照片确认页面
-- 导航栏升级为 Material 3 NavigationBar（4 tab：首页、衣橱、录入、我的）
-- 地点管理支持 GPS 定位（geolocator + geocoding）
-- 衣橱Tab 支持品类筛选（全部/上衣/裤子/裙装/外套/鞋子/配饰）
-- 闲置Tab 支持左滑唤醒 + 闲置时长显示
-- 操作日志Tab 支持时间线展示
+- 天气模块重构：改用 Open-Meteo API（免费、无需 Key、全球支持）
+- 天气默认基于定位获取，支持手动切换城市
+- 天气预报扩展至 7 天
+- 天气卡片支持定位/城市模式一键切换
+- 新增 WeatherProvider 天气状态管理
+- 新增 CitySearchScreen 城市选择页
+- 新增 WeatherDetailScreen 天气详情页
+- 新增 WeatherCard 首页天气组件
+- 相机新增放大功能：双指捏合缩放、双击切换 1x/2x
+- 相机预设档位按钮（0.5x/1x/2x/5x）与滑动条微调
+- 相机支持直接调用系统相机拍照
+- 地点管理支持地址显示与编辑
+- 全新液态玻璃 UI 设计（Bento Grid 首页、悬浮导航栏）
+- 5 套主题配色（冰川蓝/翡翠绿/玫瑰金/星空紫/月光银）
 
 Fixes:
-- 创建 assets/images/ 目录，修复资源警告
-- 20处 withOpacity -> withValues() API迁移
-- 19处 print -> debugPrint() 调试日志规范
-- 修复多处异步Context使用警告
-- analysis_options.yaml禁用deprecated_member_use和use_build_context_synchronously误报
-- 修复 Android 定位权限配置
+- 修复地点管理获取定位失败（getLastKnownPosition 兜底）
+- 修复地点管理页地址文本溢出（Expanded + ellipsis）
+- 修复桌面端不支持定位导致天气获取失败
+- 修复墨迹天气反爬虫导致获取失败（迁移至 Open-Meteo）
+- 修复缓存清理逻辑，确保 SharedPreferences 和数据库数据正确清除
+- 修复天气缓存按城市名隔离问题
 
 Chores:
-- 版本号更新为 1.0.1+4
-- 数据库版本升级至 v6（新增 operation_logs 表）
-- Flutter SDK ^3.11.5
-- 新增 flutter_localizations 国际化支持
-- 依赖包更新：provider/sqflite/camera/geolocator 等
+- 版本号更新为 2.0.0+1
+- 主题模式默认跟随系统 (ThemeMode.system)
+- 新增 AGENTS.md 项目记忆文件
+- 新增 CHANGELOG.md 更新日志
+- 新增 PROJECT_STATE.md 项目状态日志
+- 更新 README.md 版本说明
+- 更新 version_info_screen.dart 版本内容
+- 依赖新增：http/html（天气模块）
