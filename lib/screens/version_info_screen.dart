@@ -9,6 +9,16 @@ class VersionInfoScreen extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final versions = [
       {
+        'version': '2.0.0+2',
+        'date': '2026-04-29',
+        'content': [
+          '修复手动选择城市无法获取天气的问题',
+          '新增城市经纬度静态映射表，覆盖 49 个城市',
+          '天气 geocoding 优化为三级查找策略',
+          '移除天气详情页标题点击跳转城市选择',
+        ],
+      },
+      {
         'version': '2.0.0',
         'date': '2026-04-29',
         'content': [

@@ -1,12 +1,12 @@
 # 穿戴管家 (WearWise) - 项目状态日志
 
-> 最后更新: 2026-04-28 | v2.0.0 发布
+> 最后更新: 2026-04-29 | v2.0.0+2 修复
 
 ---
 
 ## 📌 当前状态
 
-- **版本**: 2.0.0+1
+- **版本**: 2.0.0+2
 - **框架**: Flutter SDK >= 3.11.5
 - **状态管理**: Provider (ClothingProvider, ThemeProvider)
 - **数据库**: sqflite 单例, db version=6
@@ -138,12 +138,15 @@ lib/
 ├── main.dart                    # 入口 (MainScreen + 导航逻辑)
 ├── models/                      # 数据模型
 │   ├── clothing_item.dart
+│   ├── city_coords.dart         # 城市经纬度映射表 (49城市)
 │   ├── outfit.dart
 │   ├── outfit_log.dart
 │   ├── location.dart
+│   ├── weather_data.dart        # 天气数据模型
 │   └── operation_log.dart
 ├── providers/                   # 状态管理
 │   ├── clothing_provider.dart
+│   ├── weather_provider.dart    # 天气状态管理
 │   └── theme_provider.dart      # 5套主题配色
 ├── screens/                     # 页面 (16个)
 │   ├── home_screen.dart         # Bento 首页
@@ -161,14 +164,19 @@ lib/
 │   ├── settings_page.dart
 │   ├── theme_color_screen.dart
 │   ├── version_info_screen.dart
-│   └── location_management_page.dart
+│   ├── location_management_page.dart
+│   ├── weather_detail_screen.dart   # 天气详情
+│   └── city_search_screen.dart      # 城市选择
 ├── services/
-│   └── database_helper.dart     # sqflite 单例
+│   ├── database_helper.dart     # sqflite 单例
+│   ├── weather_scraper.dart     # Open-Meteo API 封装
+│   └── amap_location_service.dart  # 高德定位服务
 └── widgets/
     ├── glass_card.dart          # 玻璃卡片 (BackdropFilter)
     ├── glass_button.dart        # 玻璃按钮
     ├── glass_nav_bar.dart       # 悬浮导航栏 (BackdropFilter)
-    └── bento_grid.dart          # Bento 网格
+    ├── bento_grid.dart          # Bento 网格
+    └── weather_card.dart        # 天气卡片
 ```
 
 ---

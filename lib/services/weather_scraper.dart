@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import '../models/weather_data.dart';
+import '../models/city_coords.dart';
 
 class WeatherScraper {
   static const _baseUrl = 'https://api.open-meteo.com/v1';
@@ -91,26 +92,48 @@ class WeatherScraper {
   }
 
   static Future<Map<String, double>?> _geocodeCity(String cityName) async {
-    // 使用 Open-Meteo 的 geocoding API 替代 geocoding 包
+    debugPrint('WeatherScraper: Geocoding city: $cityName');
+
+    // 优先从静态映射表查找
+    final mapped = cityCoordinates[cityName];
+    if (mapped != null) {
+      debugPrint('WeatherScraper: Found in mapping table: $cityName');
+      return mapped;
+    }
+
+    // 映射表未命中，尝试 geocoding API
     try {
-      debugPrint('WeatherScraper: Geocoding city: $cityName');
-      final url = Uri.parse('https://geocoding-api.open-meteo.com/v1/search?name=$cityName&count=1&language=zh&format=json');
-      final response = await http.get(url).timeout(const Duration(seconds: 10));
-      
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body) as Map<String, dynamic>;
-        final results = data['results'] as List?;
-        if (results != null && results.isNotEmpty) {
-          final first = results[0] as Map<String, dynamic>;
-          debugPrint('WeatherScraper: Found location lat=${first['latitude']}, lon=${first['longitude']}');
-          return {
-            'lat': first['latitude'] as double,
-            'lon': first['longitude'] as double,
-          };
-        }
+      final coords = await _queryGeocodingApi(cityName);
+      if (coords != null) return coords;
+
+      // 原始名称查询失败，去掉"市"后缀重试
+      if (cityName.endsWith('市')) {
+        final withoutSuffix = cityName.substring(0, cityName.length - 1);
+        debugPrint('WeatherScraper: Retrying without suffix: $withoutSuffix');
+        return await _queryGeocodingApi(withoutSuffix);
       }
     } catch (e) {
       debugPrint('WeatherScraper: Geocoding failed: $e');
+    }
+    return null;
+  }
+
+  static Future<Map<String, double>?> _queryGeocodingApi(String name) async {
+    final url = Uri.parse(
+        'https://geocoding-api.open-meteo.com/v1/search?name=$name&count=1&language=zh&format=json');
+    final response = await http.get(url).timeout(const Duration(seconds: 10));
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      final results = data['results'] as List?;
+      if (results != null && results.isNotEmpty) {
+        final first = results[0] as Map<String, dynamic>;
+        debugPrint('WeatherScraper: API found lat=${first['latitude']}, lon=${first['longitude']}');
+        return {
+          'lat': first['latitude'] as double,
+          'lon': first['longitude'] as double,
+        };
+      }
     }
     return null;
   }

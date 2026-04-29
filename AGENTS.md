@@ -1,6 +1,6 @@
 # WearWise (穿戴管家)
 
-Flutter 衣橱管理应用。SDK >= 3.11.5。版本 2.0.0+1。单包 Flutter App，非 monorepo。
+Flutter 衣橱管理应用。SDK >= 3.11.5。版本 2.0.0+2。单包 Flutter App，非 monorepo。
 
 ## 命令
 
@@ -33,6 +33,7 @@ dart run flutter_launcher_icons   # 生成应用图标
 - `lib/services/weather_scraper.dart` — Open-Meteo API 封装
 - `lib/providers/weather_provider.dart` — 天气状态管理
 - `lib/models/weather_data.dart` — 天气数据模型
+- `lib/models/city_coords.dart` — 城市经纬度静态映射表 (49 城市)
 - `lib/widgets/weather_card.dart` — 首页天气卡片
 - `lib/screens/weather_detail_screen.dart` — 天气详情页
 - `lib/screens/city_search_screen.dart` — 城市选择页
@@ -42,6 +43,14 @@ dart run flutter_launcher_icons   # 生成应用图标
 - **免费、无需 Key、支持全球任意经纬度**
 - **请求参数**: `latitude`, `longitude`, `current`(温度/湿度/天气码/风速/风向), `daily`(天气码/最高温/最低温/最大风速), `timezone=auto`, `forecast_days=7`
 - **天气代码映射**: 0=晴, 1=大部晴朗, 2=多云, 3=阴, 45/48=雾, 51-57=毛毛雨, 61-67=雨, 71-77=雪, 80-82=阵雨, 85-86=阵雪, 95-99=雷暴
+
+### Geocoding 策略 (v2.0.0+2 修复)
+- **问题**: Open-Meteo geocoding API 对带"市"后缀的城市（珠海市、佛山市等 22 个城市）返回空结果，上海市带"市"查询返回美国地名
+- **解决方案**: 三级查找策略
+  1. 优先查 `cityCoordinates` 静态映射表（命中即返回，无需网络请求）
+  2. 未命中则用原始名称调用 geocoding API
+  3. 仍无结果则去掉"市"后缀重试
+- **城市列表**: `city_search_screen.dart:19-31` 定义了 43 个 `_allCities`，映射表覆盖 49 个城市（含直辖市变体）
 
 ### 定位策略
 - **默认行为**: 启动时尝试基于定位获取天气

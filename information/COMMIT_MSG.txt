@@ -1,35 +1,9 @@
-v2.0.0+1 (2026-04-28)
-
-Features:
-- 天气模块重构：改用 Open-Meteo API（免费、无需 Key、全球支持）
-- 天气默认基于定位获取，支持手动切换城市
-- 天气预报扩展至 7 天
-- 天气卡片支持定位/城市模式一键切换
-- 新增 WeatherProvider 天气状态管理
-- 新增 CitySearchScreen 城市选择页
-- 新增 WeatherDetailScreen 天气详情页
-- 新增 WeatherCard 首页天气组件
-- 相机新增放大功能：双指捏合缩放、双击切换 1x/2x
-- 相机预设档位按钮（0.5x/1x/2x/5x）与滑动条微调
-- 相机支持直接调用系统相机拍照
-- 地点管理支持地址显示与编辑
-- 全新液态玻璃 UI 设计（Bento Grid 首页、悬浮导航栏）
-- 5 套主题配色（冰川蓝/翡翠绿/玫瑰金/星空紫/月光银）
+v2.0.0+2 (2026-04-29)
 
 Fixes:
-- 修复地点管理获取定位失败（getLastKnownPosition 兜底）
-- 修复地点管理页地址文本溢出（Expanded + ellipsis）
-- 修复桌面端不支持定位导致天气获取失败
-- 修复墨迹天气反爬虫导致获取失败（迁移至 Open-Meteo）
-- 修复缓存清理逻辑，确保 SharedPreferences 和数据库数据正确清除
-- 修复天气缓存按城市名隔离问题
+- 修复手动选择城市无法获取天气的问题（Open-Meteo geocoding API 对带"市"后缀城市返回空结果）
+- 移除天气详情页标题点击跳转城市选择的功能
 
-Chores:
-- 版本号更新为 2.0.0+1
-- 主题模式默认跟随系统 (ThemeMode.system)
-- 新增 AGENTS.md 项目记忆文件
-- 新增 CHANGELOG.md 更新日志
-- 新增 PROJECT_STATE.md 项目状态日志
-- 更新 README.md 版本说明
-- 更新 version_info_screen.dart 版本内容
-- 依赖新增：http/html（天气模块）
+Features:
+- 新增城市经纬度静态映射表 (lib/models/city_coords.dart)，覆盖 49 个城市
+- 天气 geocoding 优化为三级查找：映射表 → API 原始名称 → 去"市"后缀重试
