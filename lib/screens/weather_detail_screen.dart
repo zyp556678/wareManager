@@ -19,6 +19,7 @@ class WeatherDetailScreen extends StatelessWidget {
         }
 
         final weather = provider.weather!;
+        final displayName = provider.cityName ?? weather.cityName;
 
         return Scaffold(
           appBar: AppBar(
@@ -31,19 +32,37 @@ class WeatherDetailScreen extends StatelessWidget {
               },
               child: Row(
                 mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Text(weather.cityName),
+                  Flexible(
+                    child: Text(
+                      displayName,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 16),
+                    ),
+                  ),
                   const SizedBox(width: 4),
                   const Icon(Icons.keyboard_arrow_down, size: 20),
                 ],
               ),
             ),
             actions: [
-              if (weather.cityName != '当前位置')
+              IconButton(
+                icon: const Icon(Icons.my_location),
+                onPressed: () => provider.switchToLocationWeather(),
+                tooltip: '立即定位',
+              ),
+              if (displayName != '当前位置')
                 IconButton(
-                  icon: const Icon(Icons.my_location),
-                  onPressed: () => provider.switchToLocationWeather(),
-                  tooltip: '定位获取',
+                  icon: const Icon(Icons.location_city),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const CitySearchScreen()),
+                    );
+                  },
+                  tooltip: '选择城市',
                 ),
               IconButton(
                 icon: const Icon(Icons.refresh),

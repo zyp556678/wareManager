@@ -1,6 +1,6 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
-import 'package:geocoding/geocoding.dart' as geocoding;
 import '../models/weather_data.dart';
 
 class WeatherScraper {
@@ -42,8 +42,16 @@ class WeatherScraper {
   }
 
   static Future<WeatherData> fetchWeatherByCoords(
-      double lat, double lon) async {
-    final cityName = await _getCityName(lat, lon);
+      double lat, double lon, {String? cityName}) async {
+    debugPrint('WeatherScraper: Fetching weather for lat=$lat, lon=$lon');
+    String finalCityName = cityName ?? '未知城市';
+    if (cityName == null) {
+      try {
+        finalCityName = await _getCityName(lat, lon) ?? '当前位置';
+      } catch (e) {
+        debugPrint('WeatherScraper: Failed to get city name: $e');
+      }
+    }
 
     final url = Uri.parse(
         '$_baseUrl/forecast?latitude=$lat&longitude=$lon'
@@ -51,48 +59,64 @@ class WeatherScraper {
         '&daily=weather_code,temperature_2m_max,temperature_2m_min,wind_speed_10m_max'
         '&timezone=auto&forecast_days=7');
 
-    final response =
-        await http.get(url).timeout(const Duration(seconds: 15));
+    debugPrint('WeatherScraper: Requesting $url');
 
-    if (response.statusCode != 200) {
-      throw Exception('请求失败: ${response.statusCode}');
+    try {
+      final response =
+          await http.get(url).timeout(const Duration(seconds: 15));
+
+      debugPrint('WeatherScraper: Response status ${response.statusCode}');
+
+      if (response.statusCode != 200) {
+        throw Exception('请求失败: ${response.statusCode}');
+      }
+
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      return _parseResponse(data, finalCityName);
+    } catch (e) {
+      debugPrint('WeatherScraper: API request failed: $e');
+      rethrow;
     }
-
-    final data = jsonDecode(response.body) as Map<String, dynamic>;
-    return _parseResponse(data, cityName ?? '未知城市');
   }
 
   static Future<WeatherData> fetchWeather(String cityName) async {
+    debugPrint('WeatherScraper: Fetching weather for city: $cityName');
     final coords = await _geocodeCity(cityName);
     if (coords == null) {
+      debugPrint('WeatherScraper: Failed to geocode city: $cityName');
       throw Exception('未找到城市: $cityName');
     }
+    debugPrint('WeatherScraper: Geocoded to lat=${coords['lat']}, lon=${coords['lon']}');
     return fetchWeatherByCoords(coords['lat']!, coords['lon']!);
   }
 
   static Future<Map<String, double>?> _geocodeCity(String cityName) async {
+    // 使用 Open-Meteo 的 geocoding API 替代 geocoding 包
     try {
-      final locations = await geocoding.locationFromAddress(cityName);
-      if (locations.isNotEmpty) {
-        return {
-          'lat': locations.first.latitude,
-          'lon': locations.first.longitude,
-        };
+      debugPrint('WeatherScraper: Geocoding city: $cityName');
+      final url = Uri.parse('https://geocoding-api.open-meteo.com/v1/search?name=$cityName&count=1&language=zh&format=json');
+      final response = await http.get(url).timeout(const Duration(seconds: 10));
+      
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        final results = data['results'] as List?;
+        if (results != null && results.isNotEmpty) {
+          final first = results[0] as Map<String, dynamic>;
+          debugPrint('WeatherScraper: Found location lat=${first['latitude']}, lon=${first['longitude']}');
+          return {
+            'lat': first['latitude'] as double,
+            'lon': first['longitude'] as double,
+          };
+        }
       }
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('WeatherScraper: Geocoding failed: $e');
+    }
     return null;
   }
 
   static Future<String?> _getCityName(double lat, double lon) async {
-    try {
-      final placemarks =
-          await geocoding.placemarkFromCoordinates(lat, lon);
-      if (placemarks.isNotEmpty) {
-        return placemarks.first.locality ??
-            placemarks.first.subAdministrativeArea ??
-            placemarks.first.administrativeArea;
-      }
-    } catch (_) {}
+    // 城市名称由 AMapLocationService 提供，这里直接返回 null 使用默认值
     return null;
   }
 

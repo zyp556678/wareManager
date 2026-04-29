@@ -1,9 +1,10 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:geolocator/geolocator.dart';
 import '../models/weather_data.dart';
 import '../services/weather_scraper.dart';
+import '../services/amap_location_service.dart';
 
 class WeatherProvider extends ChangeNotifier {
   WeatherData? _weather;
@@ -167,38 +168,39 @@ class WeatherProvider extends ChangeNotifier {
         return;
       }
 
-      var permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
-      }
+      final locationResult = await AMapLocationService().getCurrentLocation();
 
-      if (permission == LocationPermission.denied ||
-          permission == LocationPermission.deniedForever) {
-        _error = '定位权限被拒绝，请在设置中开启';
+      if (!locationResult.isSuccess) {
+        _error = '定位失败: ${locationResult.errorInfo ?? '未知错误'}';
         _isLoading = false;
         notifyListeners();
         return;
       }
-
-      Position position = await Geolocator.getLastKnownPosition()
-          ?? await Geolocator.getCurrentPosition(
-                desiredAccuracy: LocationAccuracy.medium,
-              ).timeout(const Duration(seconds: 15));
 
       final cached = await _loadCache('current_location');
       if (cached != null) {
         _weather = cached;
-        _cityName = '当前位置';
+        _cityName = [locationResult.city, locationResult.district, locationResult.street]
+            .where((e) => e != null && e.isNotEmpty)
+            .join('');
+        if (_cityName!.isEmpty) _cityName = '当前位置';
+        debugPrint('WeatherProvider: Location weather from cache, cityName=$_cityName');
         _isLoading = false;
         notifyListeners();
         return;
       }
 
+      _cityName = [locationResult.city, locationResult.district, locationResult.street]
+          .where((e) => e != null && e.isNotEmpty)
+          .join('');
+      if (_cityName!.isEmpty) _cityName = '当前位置';
+      
       _weather = await WeatherScraper.fetchWeatherByCoords(
-        position.latitude,
-        position.longitude,
+        locationResult.latitude,
+        locationResult.longitude,
+        cityName: _cityName,
       );
-      _cityName = '当前位置';
+      debugPrint('WeatherProvider: Location weather fetched, cityName=$_cityName');
       await _saveCache('current_location');
     } catch (e) {
       _error = '定位失败: ${e.toString().replaceAll('Exception: ', '')}';

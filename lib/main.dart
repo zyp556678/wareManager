@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:amap_flutter_location_plus/amap_flutter_location_plus.dart';
 import 'screens/home_screen.dart';
 import 'screens/capture_screen.dart';
 import 'screens/wardrobe_screen.dart';
@@ -14,6 +15,11 @@ import 'widgets/glass_nav_bar.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // 初始化高德定位隐私合规
+  AMapFlutterLocation.updatePrivacyShow(true, true);
+  AMapFlutterLocation.updatePrivacyAgree(true);
+  AMapFlutterLocation.setApiKey('be44cd468bf141674cc696c89cc7c07e', '');
   
   await _requestPermissions();
   
@@ -34,6 +40,11 @@ Future<void> _requestPermissions() async {
   final photosStatus = await Permission.photos.request();
   if (photosStatus.isDenied) {
     debugPrint('照片权限被拒绝');
+  }
+  
+  final locationStatus = await Permission.location.request();
+  if (locationStatus.isDenied) {
+    debugPrint('定位权限被拒绝');
   }
 }
 

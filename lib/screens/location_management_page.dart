@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:geocoding/geocoding.dart';
 import '../models/location.dart' as model;
 import '../services/database_helper.dart';
+import '../services/amap_location_service.dart';
 import '../widgets/glass_card.dart';
 
 class LocationManagementPage extends StatefulWidget {
@@ -47,43 +46,20 @@ class _LocationManagementPageState extends State<LocationManagementPage> {
           Future<void> getCurrentLocation() async {
             setDialogState(() => isLoadingLocation = true);
             try {
-              var permission = await Geolocator.checkPermission();
-              if (permission == LocationPermission.denied) {
-                permission = await Geolocator.requestPermission();
-              }
-              if (permission == LocationPermission.deniedForever) {
+              final locationResult = await AMapLocationService().getCurrentLocation();
+              
+              if (!locationResult.isSuccess) {
                 if (dialogContext.mounted) {
-                  showDialog(context: dialogContext, builder: (ctx) => AlertDialog(
-                    title: const Text('定位权限被拒绝'),
-                    content: const Text('请在系统设置中开启定位权限'),
-                    actions: [
-                      TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('取消')),
-                      ElevatedButton(onPressed: () { Navigator.pop(ctx); Geolocator.openAppSettings(); }, child: const Text('去设置')),
-                    ],
-                  ));
+                  ScaffoldMessenger.of(dialogContext).showSnackBar(
+                    SnackBar(content: Text('定位失败: ${locationResult.errorInfo ?? '未知错误'}')),
+                  );
                 }
                 setDialogState(() => isLoadingLocation = false);
                 return;
               }
-              if (permission == LocationPermission.denied) {
-                if (dialogContext.mounted) ScaffoldMessenger.of(dialogContext).showSnackBar(const SnackBar(content: Text('定位权限被拒绝')));
-                setDialogState(() => isLoadingLocation = false);
-                return;
-              }
-              final position = await Geolocator.getLastKnownPosition()
-                  ?? await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.medium).timeout(const Duration(seconds: 15));
-              final placemarks = await placemarkFromCoordinates(position.latitude, position.longitude);
-              if (placemarks.isNotEmpty) {
-                final place = placemarks.first;
-                final parts = <String>[];
-                if (place.administrativeArea != null && place.administrativeArea!.isNotEmpty) parts.add(place.administrativeArea!);
-                if (place.subLocality != null && place.subLocality!.isNotEmpty) parts.add(place.subLocality!);
-                if (place.street != null && place.street!.isNotEmpty) parts.add(place.street!);
-                final addressStr = parts.join('');
-                setDialogState(() { address = addressStr.isNotEmpty ? addressStr : '未知地址'; isLoadingLocation = false; });
-              } else {
-                setDialogState(() => isLoadingLocation = false);
-              }
+              
+              final addressStr = locationResult.address ?? '未知地址';
+              setDialogState(() { address = addressStr; isLoadingLocation = false; });
             } catch (e) {
               if (dialogContext.mounted) ScaffoldMessenger.of(dialogContext).showSnackBar(SnackBar(content: Text('定位失败: $e')));
               setDialogState(() => isLoadingLocation = false);
@@ -162,43 +138,20 @@ class _LocationManagementPageState extends State<LocationManagementPage> {
           Future<void> getCurrentLocation() async {
             setDialogState(() => isLoadingLocation = true);
             try {
-              var permission = await Geolocator.checkPermission();
-              if (permission == LocationPermission.denied) {
-                permission = await Geolocator.requestPermission();
-              }
-              if (permission == LocationPermission.deniedForever) {
+              final locationResult = await AMapLocationService().getCurrentLocation();
+              
+              if (!locationResult.isSuccess) {
                 if (dialogContext.mounted) {
-                  showDialog(context: dialogContext, builder: (ctx) => AlertDialog(
-                    title: const Text('定位权限被拒绝'),
-                    content: const Text('请在系统设置中开启定位权限'),
-                    actions: [
-                      TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('取消')),
-                      ElevatedButton(onPressed: () { Navigator.pop(ctx); Geolocator.openAppSettings(); }, child: const Text('去设置')),
-                    ],
-                  ));
+                  ScaffoldMessenger.of(dialogContext).showSnackBar(
+                    SnackBar(content: Text('定位失败: ${locationResult.errorInfo ?? '未知错误'}')),
+                  );
                 }
                 setDialogState(() => isLoadingLocation = false);
                 return;
               }
-              if (permission == LocationPermission.denied) {
-                if (dialogContext.mounted) ScaffoldMessenger.of(dialogContext).showSnackBar(const SnackBar(content: Text('定位权限被拒绝')));
-                setDialogState(() => isLoadingLocation = false);
-                return;
-              }
-              final position = await Geolocator.getLastKnownPosition()
-                  ?? await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.medium).timeout(const Duration(seconds: 15));
-              final placemarks = await placemarkFromCoordinates(position.latitude, position.longitude);
-              if (placemarks.isNotEmpty) {
-                final place = placemarks.first;
-                final parts = <String>[];
-                if (place.administrativeArea != null && place.administrativeArea!.isNotEmpty) parts.add(place.administrativeArea!);
-                if (place.subLocality != null && place.subLocality!.isNotEmpty) parts.add(place.subLocality!);
-                if (place.street != null && place.street!.isNotEmpty) parts.add(place.street!);
-                final addressStr = parts.join('');
-                setDialogState(() { address = addressStr.isNotEmpty ? addressStr : '未知地址'; isLoadingLocation = false; });
-              } else {
-                setDialogState(() => isLoadingLocation = false);
-              }
+              
+              final addressStr = locationResult.address ?? '未知地址';
+              setDialogState(() { address = addressStr; isLoadingLocation = false; });
             } catch (e) {
               if (dialogContext.mounted) ScaffoldMessenger.of(dialogContext).showSnackBar(SnackBar(content: Text('定位失败: $e')));
               setDialogState(() => isLoadingLocation = false);

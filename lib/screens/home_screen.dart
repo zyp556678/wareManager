@@ -2,7 +2,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:geolocator/geolocator.dart';
 import '../providers/clothing_provider.dart';
 import '../providers/weather_provider.dart';
 import '../widgets/glass_card.dart';
@@ -53,13 +52,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (weatherProvider.hasData) return;
 
     try {
-      final position = await Geolocator.getLastKnownPosition();
-      if (position != null && mounted) {
-        await weatherProvider.loadWeatherByCoords(
-          position.latitude,
-          position.longitude,
-        );
-      }
+      await weatherProvider.loadWeatherByLocation();
     } catch (e) {
       debugPrint('HomeScreen: Failed to load weather: $e');
     }

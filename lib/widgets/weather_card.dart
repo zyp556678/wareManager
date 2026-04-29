@@ -250,7 +250,10 @@ class WeatherCard extends StatelessWidget {
   Widget _buildWeatherCard(BuildContext context, WeatherProvider provider) {
     final cs = Theme.of(context).colorScheme;
     final weather = provider.weather!;
-    final isLocationWeather = weather.cityName == '当前位置';
+    final displayName = provider.cityName ?? weather.cityName;
+    final isLocationWeather = provider.cityName == null || 
+        provider.cityName == '当前位置' || 
+        weather.cityName == '当前位置';
 
     return GestureDetector(
       onTap: () {
@@ -266,19 +269,21 @@ class WeatherCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                Row(
-                  children: [
-                    Icon(Icons.location_on, size: 16, color: cs.primary),
-                    const SizedBox(width: 4),
-                    Text(
-                      weather.cityName,
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: cs.primary,
-                      ),
+                Icon(Icons.location_on, size: 16, color: cs.primary),
+                const SizedBox(width: 4),
+                Flexible(
+                  child: Text(
+                    displayName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: cs.primary,
                     ),
-                    if (!isLocationWeather) ...[
+                  ),
+                ),
+                if (!isLocationWeather) ...[
                       const SizedBox(width: 8),
                       GestureDetector(
                         onTap: () {
@@ -315,8 +320,6 @@ class WeatherCard extends StatelessWidget {
                         ),
                       ),
                     ],
-                  ],
-                ),
                 const Spacer(),
                 _weatherIcon(weather.condition, size: 36),
                 const SizedBox(width: 8),
