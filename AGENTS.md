@@ -1,6 +1,6 @@
 # WearWise (穿戴管家)
 
-Flutter 衣橱管理应用。SDK >= 3.11.5。版本 2.0.0+2。单包 Flutter App，非 monorepo。
+Flutter 衣橱管理应用。SDK >= 3.11.5。版本 2.0.0+3。单包 Flutter App，非 monorepo。
 
 ## 命令
 
@@ -17,7 +17,7 @@ dart run flutter_launcher_icons   # 生成应用图标
 
 - **入口**: `lib/main.dart` → `WearWiseApp` → `MainScreen`
 - **状态管理**: `ClothingProvider`, `ThemeProvider`, `WeatherProvider` (Provider)
-- **数据库**: `DatabaseHelper` (sqflite 单例, db version=6)
+- **数据库**: `DatabaseHelper` (sqflite 单例, db version=7)
 - **导航**: 底部 4 tab (首页/衣橱/录入/我的)
   - IndexedStack 索引 0=首页, 1=衣橱, 2=我的
   - 导航栏索引 0=首页, 1=衣橱, 2=录入, 3=我的
@@ -123,10 +123,11 @@ dart run flutter_launcher_icons   # 生成应用图标
 - `ThemeProvider.isDark` — 检查 `_themeMode` 并回退到 `platformDispatcher.platformBrightness`
 - `glassColor` / `glassBorderColor` / `glassOverlayColor` — 玻璃效果颜色配置
 
-## 数据库 (version=6)
+## 数据库 (version=7)
 
-5 张表: `clothing_items`(status: active/idle), `outfits`, `outfit_logs`, `locations`, `operation_logs`(type: add/idle/wakeup/delete/edit)
+5 张表: `clothing_items`(status: active/idle, 含 idleFrom/idleUntil), `outfits`, `outfit_logs`, `locations`(含 address), `operation_logs`(type: add/idle/wakeup/delete/edit)
 
+- **v7 迁移**: `clothing_items` 新增 `idleFrom` 字段 (`ALTER TABLE`)
 - **`locations` 表**: `address` 列已在 `_createDB` 中包含（v6 迁移通过 `ALTER TABLE` 添加，对旧库兼容）
 - **升级逻辑**: `_upgradeDB` in `database_helper.dart` — 改 schema 必须同时改 `version` 和 `onUpgrade`
 
