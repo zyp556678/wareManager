@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../models/clothing_item.dart';
 import '../providers/clothing_provider.dart';
 import '../widgets/glass_card.dart';
+import '../utils/idle_utils.dart';
 import 'edit_clothing_page.dart';
 
 class ClothingDetailPage extends StatelessWidget {
@@ -81,9 +82,9 @@ class ClothingDetailPage extends StatelessWidget {
                           const Divider(height: 24),
                           _buildInfoRow('存放地点', item.storageLocation, cs),
                         ],
-                        if (item.idleUntil != null) ...[
+                        if (item.idleFrom != null && item.idleUntil != null) ...[
                           const Divider(height: 24),
-                          _buildInfoRow('闲置状态', _formatIdleDuration(item.idleUntil!), cs),
+                          _buildInfoRow('闲置状态', '${_formatDate(item.idleFrom!)} 至 ${_formatDate(item.idleUntil!)}', cs),
                         ],
                       ],
                     ),
@@ -153,27 +154,55 @@ class ClothingDetailPage extends StatelessWidget {
                 label: Text(item.status == 'active' ? '设为闲置' : '唤醒'),
                 onPressed: () async {
                   if (item.status == 'active') {
-                    final date = await showDatePicker(
+                    // 第 1 步：选择闲置开始日期（默认今天）
+                    final idleFrom = await showDatePicker(
                       context: context,
-                      initialDate: DateTime.now().add(const Duration(days: 30)),
-                      firstDate: DateTime.now(),
+                      initialDate: DateTime.now(),
+                      firstDate: DateTime(2020),
                       lastDate: DateTime.now().add(const Duration(days: 365)),
                       locale: const Locale('zh', 'CN'),
                       helpText: '选择闲置开始日期',
                       confirmText: '确认',
                       cancelText: '取消',
                     );
-                    if (date != null && context.mounted) {
-                      await context.read<ClothingProvider>().setIdle(item.id!, date, '主卧衣柜');
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('已设为闲置')));
-                        Navigator.pop(context);
-                      }
+                    if (idleFrom == null || !context.mounted) return;
+
+                    // 第 2 步：选择闲置结束日期（默认开始日期后 30 天，必须晚于开始日期）
+                    final idleUntil = await showDatePicker(
+                      context: context,
+                      initialDate: idleFrom.add(const Duration(days: 30)),
+                      firstDate: idleFrom.add(const Duration(days: 1)),
+                      lastDate: DateTime(2100),
+                      locale: const Locale('zh', 'CN'),
+                      helpText: '选择闲置结束日期',
+                      confirmText: '确认',
+                      cancelText: '取消',
+                    );
+                    if (idleUntil == null || !context.mounted) return;
+
+                    // 第 3 步：选择存放地点
+                    final location = await showLocationPicker(context);
+                    if (location == null || !context.mounted) return;
+
+                    // 调用 provider 保存
+                    await context.read<ClothingProvider>().setIdle(
+                          item.id!,
+                          idleFrom,
+                          idleUntil,
+                          location,
+                        );
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('已设为闲置')),
+                      );
+                      Navigator.pop(context);
                     }
                   } else {
                     await context.read<ClothingProvider>().wakeUpIdle(item.id!);
                     if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('已唤醒')));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('已唤醒')),
+                      );
                       Navigator.pop(context);
                     }
                   }
@@ -197,18 +226,7 @@ class ClothingDetailPage extends StatelessWidget {
     );
   }
 
-  String _formatIdleDuration(DateTime idleUntil) {
-    final now = DateTime.now();
-    final difference = idleUntil.difference(now).inDays;
-    if (difference < 0) {
-      final pastDays = difference.abs();
-      if (pastDays < 30) return '已闲置 $pastDays 天';
-      if (pastDays < 365) return '已闲置 ${pastDays ~/ 30} 个月';
-      return '已闲置 ${pastDays ~/ 365} 年';
-    }
-    if (difference == 0) return '今天开始闲置';
-    if (difference < 30) return '$difference 天后闲置结束';
-    if (difference < 365) return '${difference ~/ 30} 个月后闲置结束';
-    return '${difference ~/ 365} 年后闲置结束';
+  String _formatDate(DateTime date) {
+    return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
   }
 }

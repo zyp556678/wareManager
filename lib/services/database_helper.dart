@@ -24,7 +24,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 6,
+      version: 7,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -44,6 +44,9 @@ class DatabaseHelper {
       } catch (_) {}
       await db.execute('ALTER TABLE locations ADD COLUMN address TEXT');
     }
+    if (oldVersion < 7) {
+      await db.execute('ALTER TABLE clothing_items ADD COLUMN idleFrom INTEGER');
+    }
   }
 
   Future<void> _createDB(Database db, int version) async {
@@ -62,6 +65,7 @@ class DatabaseHelper {
         season TEXT,
         customTags TEXT,
         status TEXT DEFAULT 'active',
+        idleFrom INTEGER,
         idleUntil INTEGER,
         storageLocation TEXT,
         createdDate $integerType

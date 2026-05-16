@@ -23,30 +23,31 @@ class _IdleTabState extends State<IdleTab> {
   }
 
   void _showIdleItemMenu(BuildContext context, ClothingItem item) {
+    final pageContext = context;
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (context) => GlassCard(
+      builder: (bottomSheetContext) => GlassCard(
         margin: const EdgeInsets.all(16),
         padding: EdgeInsets.zero,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: Icon(Icons.wb_sunny_outlined, color: Theme.of(context).colorScheme.primary),
+              leading: Icon(Icons.wb_sunny_outlined, color: Theme.of(pageContext).colorScheme.primary),
               title: const Text('唤醒'),
               onTap: () {
-                Navigator.pop(context);
-                _wakeUpIdle(context, item);
+                Navigator.pop(bottomSheetContext);
+                _wakeUpIdle(pageContext, item);
               },
             ),
             ListTile(
-              leading: Icon(Icons.edit_outlined, color: Theme.of(context).colorScheme.primary),
+              leading: Icon(Icons.edit_outlined, color: Theme.of(pageContext).colorScheme.primary),
               title: const Text('编辑'),
               onTap: () {
-                Navigator.pop(context);
+                Navigator.pop(bottomSheetContext);
                 Navigator.push(
-                  context,
+                  pageContext,
                   MaterialPageRoute(builder: (_) => EditClothingPage(item: item)),
                 );
               },
@@ -55,8 +56,8 @@ class _IdleTabState extends State<IdleTab> {
               leading: const Icon(Icons.delete_outline, color: Colors.red),
               title: const Text('删除', style: TextStyle(color: Colors.red)),
               onTap: () {
-                Navigator.pop(context);
-                _showDeleteConfirm(context, item);
+                Navigator.pop(bottomSheetContext);
+                _showDeleteConfirm(pageContext, item);
               },
             ),
           ],

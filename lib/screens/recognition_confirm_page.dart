@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../models/clothing_item.dart';
 import '../providers/clothing_provider.dart';
 import '../utils/image_utils.dart';
+import '../utils/idle_utils.dart';
 
 class RecognitionConfirmPage extends StatefulWidget {
   final String imagePath;
@@ -37,13 +38,14 @@ class _RecognitionConfirmPageState extends State<RecognitionConfirmPage> {
   }
 
   void _showIdleSettings() {
-    DateTime? selectedDate;
-    String selectedLocation = '主卧衣柜';
-    final List<String> locations = ['主卧衣柜', '次卧衣柜', '收纳箱A', '收纳箱B'];
+    DateTime idleFrom = DateTime.now();
+    DateTime idleUntil = DateTime.now().add(const Duration(days: 30));
+    String? selectedLocation;
 
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      backgroundColor: Colors.transparent,
       builder: (context) => StatefulBuilder(
         builder: (context, setModalState) => Container(
           padding: EdgeInsets.only(
@@ -52,25 +54,38 @@ class _RecognitionConfirmPageState extends State<RecognitionConfirmPage> {
             right: 16,
             top: 16,
           ),
+          decoration: BoxDecoration(
+            color: Theme.of(context).scaffoldBackgroundColor,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Container(
+                margin: const EdgeInsets.only(bottom: 16),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
               const Text(
                 '闲置设置',
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 24),
 
-              // 日期选择
-              const Text('预计闲置至'),
+              // 开始日期
+              const Text('闲置开始日期'),
               const SizedBox(height: 8),
               InkWell(
                 onTap: () async {
                   final date = await showDatePicker(
                     context: context,
-                    initialDate: DateTime.now().add(const Duration(days: 30)),
-                    firstDate: DateTime.now(),
+                    initialDate: idleFrom,
+                    firstDate: DateTime(2020),
                     lastDate: DateTime.now().add(const Duration(days: 365)),
                     locale: const Locale('zh', 'CN'),
                     helpText: '选择闲置开始日期',
@@ -79,7 +94,11 @@ class _RecognitionConfirmPageState extends State<RecognitionConfirmPage> {
                   );
                   if (date != null) {
                     setModalState(() {
-                      selectedDate = date;
+                      idleFrom = date;
+                      // 确保结束日期晚于开始日期
+                      if (!idleUntil.isAfter(idleFrom)) {
+                        idleUntil = idleFrom.add(const Duration(days: 30));
+                      }
                     });
                   }
                 },
@@ -89,10 +108,52 @@ class _RecognitionConfirmPageState extends State<RecognitionConfirmPage> {
                     border: Border.all(color: Colors.grey),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Text(
-                    selectedDate != null
-                        ? '${selectedDate!.year}-${selectedDate!.month.toString().padLeft(2, '0')}-${selectedDate!.day.toString().padLeft(2, '0')}'
-                        : '选择日期',
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        '${idleFrom.year}-${idleFrom.month.toString().padLeft(2, '0')}-${idleFrom.day.toString().padLeft(2, '0')}',
+                      ),
+                      const Icon(Icons.calendar_today, size: 18),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // 结束日期
+              const Text('闲置结束日期'),
+              const SizedBox(height: 8),
+              InkWell(
+                onTap: () async {
+                  final date = await showDatePicker(
+                    context: context,
+                    initialDate: idleUntil,
+                    firstDate: idleFrom.add(const Duration(days: 1)),
+                    lastDate: DateTime(2100),
+                    locale: const Locale('zh', 'CN'),
+                    helpText: '选择闲置结束日期',
+                    confirmText: '确认',
+                    cancelText: '取消',
+                  );
+                  if (date != null) {
+                    setModalState(() => idleUntil = date);
+                  }
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        '${idleUntil.year}-${idleUntil.month.toString().padLeft(2, '0')}-${idleUntil.day.toString().padLeft(2, '0')}',
+                      ),
+                      const Icon(Icons.calendar_today, size: 18),
+                    ],
                   ),
                 ),
               ),
@@ -101,52 +162,38 @@ class _RecognitionConfirmPageState extends State<RecognitionConfirmPage> {
               // 放置地点
               const Text('放置地点'),
               const SizedBox(height: 8),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  ...locations.map((location) => ChoiceChip(
-                        label: Text(location),
-                        selected: selectedLocation == location,
-                        onSelected: (selected) {
-                          setModalState(() {
-                            selectedLocation = location;
-                          });
-                        },
-                      )),
-                  ActionChip(
-                    avatar: const Icon(Icons.add, size: 18),
-                    label: const Text('新建'),
-                    onPressed: () {
-                      showDialog(
-                        context: context,
-                        builder: (context) => AlertDialog(
-                          title: const Text('新建地点'),
-                          content: TextField(
-                            decoration: const InputDecoration(
-                              hintText: '输入地点名称',
-                            ),
-                            onSubmitted: (value) {
-                              if (value.isNotEmpty) {
-                                setModalState(() {
-                                  locations.add(value);
-                                  selectedLocation = value;
-                                });
-                                Navigator.pop(context);
-                              }
-                            },
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(context),
-                              child: const Text('取消'),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
+              InkWell(
+                onTap: () async {
+                  final location = await showLocationPicker(context);
+                  if (location != null) {
+                    setModalState(() => selectedLocation = location);
+                  }
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: selectedLocation != null
+                          ? Theme.of(context).colorScheme.primary
+                          : Colors.grey,
+                    ),
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                ],
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        selectedLocation ?? '选择存放地点',
+                        style: TextStyle(
+                          color: selectedLocation != null
+                              ? null
+                              : Colors.grey,
+                        ),
+                      ),
+                      const Icon(Icons.location_on, size: 18),
+                    ],
+                  ),
+                ),
               ),
               const SizedBox(height: 24),
 
@@ -154,15 +201,46 @@ class _RecognitionConfirmPageState extends State<RecognitionConfirmPage> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () {
-                    if (selectedDate != null) {
-                      Navigator.pop(context);
+                  onPressed: () async {
+                    if (selectedLocation == null) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('请选择存放地点')),
+                      );
+                      return;
+                    }
+
+                    Navigator.pop(context);
+
+                    // 保存图片
+                    final savedPath =
+                        await saveImageToAppDir(widget.imagePath);
+
+                    // 直接创建闲置状态的衣物
+                    final clothingItem = ClothingItem(
+                      imagePath: savedPath,
+                      category: _category,
+                      color: '默认',
+                      material: _material,
+                      style: _style,
+                      season: _season,
+                      customTags: _tags,
+                      status: 'idle',
+                      idleFrom: idleFrom,
+                      idleUntil: idleUntil,
+                      storageLocation: selectedLocation!,
+                      createdDate: DateTime.now(),
+                    );
+
+                    if (mounted) {
+                      await context
+                          .read<ClothingProvider>()
+                          .addClothingItem(clothingItem);
+                    }
+
+                    if (mounted) {
+                      Navigator.popUntil(context, (route) => route.isFirst);
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('已进入闲置')),
-                      );
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('请选择闲置日期')),
                       );
                     }
                   },
@@ -396,14 +474,14 @@ class _RecognitionConfirmPageState extends State<RecognitionConfirmPage> {
         child: Row(
           children: [
             Expanded(
-              child: OutlinedButton(
+              child: ElevatedButton(
                 onPressed: _saveToWardrobe,
                 child: const Text('直接收入衣橱'),
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: ElevatedButton(
+              child: OutlinedButton(
                 onPressed: _showIdleSettings,
                 child: const Text('进入闲置设置'),
               ),

@@ -1,15 +1,15 @@
 # 穿戴管家 (WearWise) - 项目状态日志
 
-> 最后更新: 2026-04-29 | v2.0.0+2 修复
+> 最后更新: 2026-05-16 | v2.0.0+3 闲置设置重构
 
 ---
 
 ## 📌 当前状态
 
-- **版本**: 2.0.0+2
+- **版本**: 2.0.0+3
 - **框架**: Flutter SDK >= 3.11.5
-- **状态管理**: Provider (ClothingProvider, ThemeProvider)
-- **数据库**: sqflite 单例, db version=6
+- **状态管理**: Provider (ClothingProvider, ThemeProvider, WeatherProvider)
+- **数据库**: sqflite 单例, db version=7
 - **静态分析**: `flutter analyze` 通过，无错误
 
 ---
@@ -70,11 +70,11 @@
 
 ---
 
-## 🗄️ 数据库表 (5张, version=6)
+## 🗄️ 数据库表 (5张, version=7)
 
 | 表名 | 说明 |
 |------|------|
-| `clothing_items` | 衣物 (status: active/idle) |
+| `clothing_items` | 衣物 (status: active/idle, 含 idleFrom/idleUntil 字段) |
 | `outfits` | 穿搭 |
 | `outfit_logs` | 穿搭日志 |
 | `locations` | 存储地点 (含 address 字段) |
@@ -90,11 +90,12 @@ dependencies:
   sqflite: ^2.3.0
   image_picker: ^1.0.7
   camera: ^0.10.5+9
-  liquid_glass_easy: ^1.1.1  # 新增
+  liquid_glass_easy: ^1.1.1
   flutter_staggered_grid_view: ^0.7.0
   table_calendar: ^3.0.9
-  geolocator: ^12.0.0
-  geocoding: ^3.0.0
+  amap_flutter_location_plus: ^3.1.2  # 高德定位
+  http: ^1.2.0                        # HTTP 请求
+  html: ^0.15.4                       # HTML 解析
   shared_preferences: ^2.2.2
   permission_handler: ^11.2.0
   path_provider: ^2.1.1
@@ -125,9 +126,11 @@ dart run flutter_launcher_icons   # 生成图标
 3. **偏好单引号**: `prefer_single_quotes: true`
 4. **新 clone 后**: 需 `flutter create .` 生成平台工程文件
 5. **数据库升级**: 需同时改 `version` + `onUpgrade` 逻辑
-6. **权限请求**: 在 `main()` 中同步执行 (camera/storage/photos)
+6. **权限请求**: 在 `main()` 中同步执行 (camera/storage/photos/location)
 7. **MainScreenState 是 public**: 供子页面调用 `setTabIndex`/`setWardrobeTab`
 8. **BackdropFilter 性能**: 模糊效果在低端设备可能影响性能，如需优化可降低 sigma 值或使用 snapshot 模式
+9. **showModalBottomSheet context 遮蔽**: builder 回调中的 context 参数会遮蔽外部 context，关闭弹窗后该 context 失效。需使用 `final pageContext = context;` 保存页面 context 传递给后续操作
+10. **闲置设置流程**: 两步日期选择（开始 → 结束）+ 地点选择，地点从 locations 表动态加载
 
 ---
 
@@ -137,18 +140,18 @@ dart run flutter_launcher_icons   # 生成图标
 lib/
 ├── main.dart                    # 入口 (MainScreen + 导航逻辑)
 ├── models/                      # 数据模型
-│   ├── clothing_item.dart
+│   ├── clothing_item.dart       # 衣物模型 (含 idleFrom/idleUntil)
 │   ├── city_coords.dart         # 城市经纬度映射表 (49城市)
 │   ├── outfit.dart
 │   ├── outfit_log.dart
-│   ├── location.dart
+│   ├── location.dart            # 地点模型
 │   ├── weather_data.dart        # 天气数据模型
 │   └── operation_log.dart
 ├── providers/                   # 状态管理
-│   ├── clothing_provider.dart
+│   ├── clothing_provider.dart   # 衣物状态 (含 setIdle 闲置设置)
 │   ├── weather_provider.dart    # 天气状态管理
 │   └── theme_provider.dart      # 5套主题配色
-├── screens/                     # 页面 (16个)
+├── screens/                     # 页面 (18个)
 │   ├── home_screen.dart         # Bento 首页
 │   ├── wardrobe_screen.dart     # 衣橱容器
 │   ├── wardrobe_tab.dart        # 衣橱网格
@@ -156,7 +159,7 @@ lib/
 │   ├── outfit_log_tab.dart      # 操作日志
 │   ├── capture_screen.dart      # 拍照
 │   ├── photo_confirm_screen.dart
-│   ├── recognition_confirm_page.dart
+│   ├── recognition_confirm_page.dart  # 识别确认 (含闲置设置)
 │   ├── clothing_detail_page.dart
 │   ├── edit_clothing_page.dart
 │   ├── profile_screen.dart      # 个人中心
@@ -164,13 +167,16 @@ lib/
 │   ├── settings_page.dart
 │   ├── theme_color_screen.dart
 │   ├── version_info_screen.dart
-│   ├── location_management_page.dart
-│   ├── weather_detail_screen.dart   # 天气详情
-│   └── city_search_screen.dart      # 城市选择
+│   ├── location_management_page.dart  # 地点管理
+│   ├── weather_detail_screen.dart     # 天气详情
+│   └── city_search_screen.dart        # 城市选择
 ├── services/
-│   ├── database_helper.dart     # sqflite 单例
+│   ├── database_helper.dart     # sqflite 单例 (version=7)
 │   ├── weather_scraper.dart     # Open-Meteo API 封装
 │   └── amap_location_service.dart  # 高德定位服务
+├── utils/
+│   ├── image_utils.dart         # 图片工具
+│   └── idle_utils.dart          # 公共地点选择方法
 └── widgets/
     ├── glass_card.dart          # 玻璃卡片 (BackdropFilter)
     ├── glass_button.dart        # 玻璃按钮

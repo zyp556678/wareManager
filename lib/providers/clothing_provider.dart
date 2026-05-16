@@ -66,13 +66,27 @@ class ClothingProvider with ChangeNotifier {
       _clothingItems.insert(0, newItem);
       _rebuildCache();
 
-      await addOperationLog(OperationLog(
-        type: 'add',
-        clothingId: id,
-        clothingName: '${item.category} · ${item.color}',
-        content: '新增衣物',
-        createdAt: DateTime.now(),
-      ));
+      // 根据状态添加不同的操作日志
+      if (item.status == 'idle' && item.idleFrom != null && item.idleUntil != null) {
+        final fromStr = '${item.idleFrom!.year}-${item.idleFrom!.month.toString().padLeft(2, '0')}-${item.idleFrom!.day.toString().padLeft(2, '0')}';
+        final untilStr = '${item.idleUntil!.year}-${item.idleUntil!.month.toString().padLeft(2, '0')}-${item.idleUntil!.day.toString().padLeft(2, '0')}';
+        await addOperationLog(OperationLog(
+          type: 'idle',
+          clothingId: id,
+          clothingName: '${item.category} · ${item.color}',
+          content: '设为闲置',
+          extra: '$fromStr 至 $untilStr，存放在 ${item.storageLocation}',
+          createdAt: DateTime.now(),
+        ));
+      } else {
+        await addOperationLog(OperationLog(
+          type: 'add',
+          clothingId: id,
+          clothingName: '${item.category} · ${item.color}',
+          content: '新增衣物',
+          createdAt: DateTime.now(),
+        ));
+      }
 
       notifyListeners();
     } catch (e) {
@@ -117,7 +131,7 @@ class ClothingProvider with ChangeNotifier {
         .toList();
   }
 
-  Future<void> setIdle(int id, DateTime until, String location) async {
+  Future<void> setIdle(int id, DateTime idleFrom, DateTime idleUntil, String location) async {
     try {
       final index = _clothingItems.indexWhere((c) => c.id == id);
       if (index == -1) {
@@ -128,19 +142,21 @@ class ClothingProvider with ChangeNotifier {
       final item = _clothingItems[index];
       final updatedItem = item.copyWith(
         status: 'idle',
-        idleUntil: until,
+        idleFrom: idleFrom,
+        idleUntil: idleUntil,
         storageLocation: location,
       );
 
       await updateClothingItem(updatedItem);
 
-      final dateStr = '${until.year}-${until.month.toString().padLeft(2, '0')}-${until.day.toString().padLeft(2, '0')}';
+      final fromStr = '${idleFrom.year}-${idleFrom.month.toString().padLeft(2, '0')}-${idleFrom.day.toString().padLeft(2, '0')}';
+      final untilStr = '${idleUntil.year}-${idleUntil.month.toString().padLeft(2, '0')}-${idleUntil.day.toString().padLeft(2, '0')}';
       await addOperationLog(OperationLog(
         type: 'idle',
         clothingId: id,
         clothingName: '${item.category} · ${item.color}',
         content: '设为闲置',
-        extra: '闲置至 $dateStr，存放在 $location',
+        extra: '$fromStr 至 $untilStr，存放在 $location',
         createdAt: DateTime.now(),
       ));
 

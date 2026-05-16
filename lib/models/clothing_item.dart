@@ -8,6 +8,7 @@ class ClothingItem {
   final String season;
   final List<String> customTags;
   final String status; // active/idle
+  final DateTime? idleFrom;
   final DateTime? idleUntil;
   final String storageLocation;
   final DateTime createdDate;
@@ -22,6 +23,7 @@ class ClothingItem {
     this.season = '',
     this.customTags = const [],
     this.status = 'active',
+    this.idleFrom,
     this.idleUntil,
     this.storageLocation = '',
     required this.createdDate,
@@ -38,6 +40,7 @@ class ClothingItem {
       'season': season,
       'customTags': customTags.join(','),
       'status': status,
+      'idleFrom': idleFrom?.millisecondsSinceEpoch,
       'idleUntil': idleUntil?.millisecondsSinceEpoch,
       'storageLocation': storageLocation,
       'createdDate': createdDate.millisecondsSinceEpoch,
@@ -57,6 +60,9 @@ class ClothingItem {
           ? (map['customTags'] as String).split(',')
           : [],
       status: map['status'] ?? 'active',
+      idleFrom: map['idleFrom'] != null
+          ? DateTime.fromMillisecondsSinceEpoch(map['idleFrom'])
+          : null,
       idleUntil: map['idleUntil'] != null
           ? DateTime.fromMillisecondsSinceEpoch(map['idleUntil'])
           : null,
@@ -75,6 +81,7 @@ class ClothingItem {
     String? season,
     List<String>? customTags,
     String? status,
+    DateTime? idleFrom,
     DateTime? idleUntil,
     String? storageLocation,
     DateTime? createdDate,
@@ -89,6 +96,7 @@ class ClothingItem {
       season: season ?? this.season,
       customTags: customTags ?? this.customTags,
       status: status ?? this.status,
+      idleFrom: idleFrom ?? this.idleFrom,
       idleUntil: idleUntil ?? this.idleUntil,
       storageLocation: storageLocation ?? this.storageLocation,
       createdDate: createdDate ?? this.createdDate,

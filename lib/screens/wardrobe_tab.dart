@@ -6,6 +6,7 @@ import '../providers/clothing_provider.dart';
 import '../models/clothing_item.dart';
 import '../widgets/glass_card.dart';
 import '../widgets/glass_button.dart';
+import '../utils/idle_utils.dart';
 import 'clothing_detail_page.dart';
 import 'edit_clothing_page.dart';
 
@@ -21,30 +22,31 @@ class _WardrobeTabState extends State<WardrobeTab> {
   final List<String> _categories = ['全部', '上衣', '裤子', '裙装', '外套', '鞋子', '配饰'];
 
   void _showItemMenu(BuildContext context, ClothingItem item) {
+    final pageContext = context;
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (context) => GlassCard(
+      builder: (bottomSheetContext) => GlassCard(
         margin: const EdgeInsets.all(16),
         padding: EdgeInsets.zero,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: Icon(Icons.pause_circle_outline, color: Theme.of(context).colorScheme.primary),
+              leading: Icon(Icons.pause_circle_outline, color: Theme.of(pageContext).colorScheme.primary),
               title: const Text('设为闲置'),
               onTap: () {
-                Navigator.pop(context);
+                Navigator.pop(bottomSheetContext);
                 _setAsIdle(item);
               },
             ),
             ListTile(
-              leading: Icon(Icons.edit_outlined, color: Theme.of(context).colorScheme.primary),
+              leading: Icon(Icons.edit_outlined, color: Theme.of(pageContext).colorScheme.primary),
               title: const Text('编辑'),
               onTap: () {
-                Navigator.pop(context);
+                Navigator.pop(bottomSheetContext);
                 Navigator.push(
-                  context,
+                  pageContext,
                   MaterialPageRoute(builder: (_) => EditClothingPage(item: item)),
                 );
               },
@@ -53,8 +55,8 @@ class _WardrobeTabState extends State<WardrobeTab> {
               leading: const Icon(Icons.delete_outline, color: Colors.red),
               title: const Text('删除', style: TextStyle(color: Colors.red)),
               onTap: () {
-                Navigator.pop(context);
-                _showDeleteConfirm(context, item);
+                Navigator.pop(bottomSheetContext);
+                _showDeleteConfirm(pageContext, item);
               },
             ),
           ],
@@ -64,24 +66,47 @@ class _WardrobeTabState extends State<WardrobeTab> {
   }
 
   Future<void> _setAsIdle(ClothingItem item) async {
-    final date = await showDatePicker(
+    // 第 1 步：选择闲置开始日期（默认今天）
+    final idleFrom = await showDatePicker(
       context: context,
-      initialDate: DateTime.now().add(const Duration(days: 30)),
-      firstDate: DateTime.now(),
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2020),
       lastDate: DateTime.now().add(const Duration(days: 365)),
       locale: const Locale('zh', 'CN'),
       helpText: '选择闲置开始日期',
       confirmText: '确认',
       cancelText: '取消',
     );
+    if (idleFrom == null || !mounted) return;
 
-    if (date != null && mounted) {
-      await context.read<ClothingProvider>().setIdle(item.id!, date, '主卧衣柜');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('已设为闲置')),
+    // 第 2 步：选择闲置结束日期（默认开始日期后 30 天，必须晚于开始日期）
+    final idleUntil = await showDatePicker(
+      context: context,
+      initialDate: idleFrom.add(const Duration(days: 30)),
+      firstDate: idleFrom.add(const Duration(days: 1)),
+      lastDate: DateTime(2100),
+      locale: const Locale('zh', 'CN'),
+      helpText: '选择闲置结束日期',
+      confirmText: '确认',
+      cancelText: '取消',
+    );
+    if (idleUntil == null || !mounted) return;
+
+    // 第 3 步：选择存放地点
+    final location = await showLocationPicker(context);
+    if (location == null || !mounted) return;
+
+    // 调用 provider 保存
+    await context.read<ClothingProvider>().setIdle(
+          item.id!,
+          idleFrom,
+          idleUntil,
+          location,
         );
-      }
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('已设为闲置')),
+      );
     }
   }
 

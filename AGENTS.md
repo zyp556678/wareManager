@@ -55,7 +55,7 @@ dart run flutter_launcher_icons   # 生成应用图标
 ### 定位策略
 - **默认行为**: 启动时尝试基于定位获取天气
 - **桌面端/Web**: 不支持定位，直接提示用户手动选择城市
-- **移动端**: `Geolocator.getLastKnownPosition()` 优先 → 兜底 `getCurrentPosition()` (15 秒超时)
+- **移动端**: 使用高德定位 (`AMapLocationService`)，30 秒超时
 - **权限处理**: 拒绝/永久拒绝时返回错误提示，不崩溃
 - **缓存键**: 定位天气使用 `'current_location'` 作为缓存键，城市天气使用城市名
 
@@ -102,7 +102,7 @@ dart run flutter_launcher_icons   # 生成应用图标
 ### 修复内容
 - **定位兜底**: `getLastKnownPosition()` 优先 → 兜底 `getCurrentPosition(medium)`，解决模拟器无 GPS 超时问题
 - **地址溢出**: 地址文本使用 `Expanded` + `TextOverflow.ellipsis`，防止长地址溢出 Row
-- **地址列**: `locations` 表 `address` 列已在 `_createDB` 中包含（v6 迁移通过 `ALTER TABLE` 添加）
+- **地址列**: `locations` 表 `address` 列已在 `_createDB` 中包含（v6 迁移通过 `ALTER TABLE` 添加，对旧库兼容）
 
 ## 主题系统
 
@@ -127,7 +127,7 @@ dart run flutter_launcher_icons   # 生成应用图标
 
 5 张表: `clothing_items`(status: active/idle), `outfits`, `outfit_logs`, `locations`, `operation_logs`(type: add/idle/wakeup/delete/edit)
 
-- **`locations` 表**: `address` 列已在 `_createDB` 中包含（v6 迁移也通过 `ALTER TABLE` 添加，对旧库兼容）
+- **`locations` 表**: `address` 列已在 `_createDB` 中包含（v6 迁移通过 `ALTER TABLE` 添加，对旧库兼容）
 - **升级逻辑**: `_upgradeDB` in `database_helper.dart` — 改 schema 必须同时改 `version` 和 `onUpgrade`
 
 ## 缓存清理 (v2.0.0 修复)
@@ -167,9 +167,10 @@ dart run flutter_launcher_icons   # 生成应用图标
 - 新 clone 后需 `flutter create .` 生成平台工程文件
 - AndroidStudio 必须打开根目录 `wareManager/`
 - 数据库升级需同时改 `version` + `onUpgrade` 逻辑
-- 权限请求在 `main()` 中同步执行 (camera/storage/photos)
+- 权限请求在 `main()` 中同步执行 (camera/storage/photos/location)
 - `MainScreenState` 是 public (供子页面调用 `setTabIndex`/`setWardrobeTab`)
 - `WardrobeScreenState` 也是 public (供外部调用 `switchToTab`)
-- **桌面端/Web 不支持 `Geolocator` 定位**，天气模块会跳过定位直接提示
+- **桌面端/Web 不支持高德定位**，天气模块会跳过定位直接提示
 - **camera 包无法直接获取 `maxAvailableZoom`**，最大缩放硬编码为 10.0
 - **天气缓存按城市名隔离**，定位天气使用 `'current_location'` 作为缓存键
+- **AMap API Key 硬编码在 `main.dart:22`**，隐私合规初始化在 `main()` 中同步执行
