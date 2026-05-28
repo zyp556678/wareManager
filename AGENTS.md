@@ -50,7 +50,7 @@ dart run flutter_launcher_icons   # 生成应用图标
   1. 优先查 `cityCoordinates` 静态映射表（命中即返回，无需网络请求）
   2. 未命中则用原始名称调用 geocoding API
   3. 仍无结果则去掉"市"后缀重试
-- **城市列表**: `city_search_screen.dart:19-31` 定义了 43 个 `_allCities`，映射表覆盖 49 个城市（含直辖市变体）
+- **城市列表**: `city_search_screen.dart:19-31` 定义了 49 个 `_allCities`，与 `city_coords.dart` 映射表一一对应（含直辖市变体）
 
 ### 定位策略
 - **默认行为**: 启动时尝试基于定位获取天气
@@ -162,6 +162,7 @@ dart run flutter_launcher_icons   # 生成应用图标
 - `FormField.value` → 用 `initialValue`
 - `Radio.groupValue/onChanged` → 用 `RadioGroup`
 - `test/widget_test.dart` 断言 `BottomNavigationBar` 但实际用的是 `GlassNavBar`，测试已过期
+- **`pubspec.yaml` 版本号滞后** (`2.0.0+2`)，实际最新为 `2.0.0+3`（见 git tag/README），改版本号时别忘了更新 `pubspec.yaml`
 
 ## 陷阱
 
