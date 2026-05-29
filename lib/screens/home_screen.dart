@@ -8,6 +8,7 @@ import '../widgets/glass_card.dart';
 import '../widgets/bento_grid.dart';
 import '../widgets/weather_card.dart';
 import 'clothing_detail_page.dart';
+import 'outfit_recommendation_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final Function(int)? onNavigateToTab;
@@ -144,6 +145,65 @@ class _HomeScreenState extends State<HomeScreen> {
                   return BentoGrid(
                     crossAxisCount: 2,
                     items: [
+                      // Outfit Recommendation Card
+                      BentoItem(
+                        span: 2,
+                        height: 100,
+                        child: GlassCard(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const OutfitRecommendationScreen(),
+                              ),
+                            );
+                          },
+                          padding: const EdgeInsets.all(16),
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      cs.primary,
+                                      cs.primary.withValues(alpha: 0.7),
+                                    ],
+                                  ),
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
+                                child: const Icon(Icons.auto_awesome, color: Colors.white, size: 24),
+                              ),
+                              const SizedBox(width: 14),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      '今日穿搭推荐',
+                                      style: TextStyle(
+                                        fontSize: 17,
+                                        fontWeight: FontWeight.bold,
+                                        color: cs.onSurface,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      '基于天气智能推荐',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: cs.onSurface.withValues(alpha: 0.5),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Icon(Icons.chevron_right, color: cs.primary),
+                            ],
+                          ),
+                        ),
+                      ),
                       BentoItem(
                         span: 2,
                         height: 120,
