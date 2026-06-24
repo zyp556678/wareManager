@@ -4,6 +4,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 class ThemeProvider extends ChangeNotifier {
   int _colorIndex = 0;
   ThemeMode _themeMode = ThemeMode.system;
+  String? _backgroundPath;
+  bool _backgroundEnabled = false;
+  double _backgroundOpacity = 0.3;
   late SharedPreferences _prefs;
 
   static const List<String> colorNames = [
@@ -23,6 +26,9 @@ class ThemeProvider extends ChangeNotifier {
     _colorIndex = _prefs.getInt('colorIndex') ?? 0;
     final modeIndex = _prefs.getInt('themeMode') ?? 0;
     _themeMode = ThemeMode.values[modeIndex];
+    _backgroundPath = _prefs.getString('background_path');
+    _backgroundEnabled = _prefs.getBool('background_enabled') ?? false;
+    _backgroundOpacity = _prefs.getDouble('background_opacity') ?? 0.3;
     notifyListeners();
   }
 
@@ -40,6 +46,37 @@ class ThemeProvider extends ChangeNotifier {
     if (_themeMode == mode) return;
     _themeMode = mode;
     _prefs.setInt('themeMode', mode.index);
+    notifyListeners();
+  }
+
+  // 自定义背景
+  String? get backgroundPath => _backgroundPath;
+  bool get backgroundEnabled => _backgroundEnabled;
+
+  void setBackground(String? path) {
+    _backgroundPath = path;
+    if (path != null) {
+      _prefs.setString('background_path', path);
+    } else {
+      _prefs.remove('background_path');
+    }
+    notifyListeners();
+  }
+
+  void toggleBackground(bool enabled) {
+    if (_backgroundEnabled == enabled) return;
+    _backgroundEnabled = enabled;
+    _prefs.setBool('background_enabled', enabled);
+    notifyListeners();
+  }
+
+  double get backgroundOpacity => _backgroundOpacity;
+
+  void setBackgroundOpacity(double value) {
+    final clamped = value.clamp(0.0, 1.0);
+    if (_backgroundOpacity == clamped) return;
+    _backgroundOpacity = clamped;
+    _prefs.setDouble('background_opacity', clamped);
     notifyListeners();
   }
 

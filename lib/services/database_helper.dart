@@ -24,7 +24,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 7,
+      version: 8,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -46,6 +46,28 @@ class DatabaseHelper {
     }
     if (oldVersion < 7) {
       await db.execute('ALTER TABLE clothing_items ADD COLUMN idleFrom INTEGER');
+    }
+    if (oldVersion < 8) {
+      await db.execute('''
+        CREATE TABLE chat_sessions (
+          id TEXT PRIMARY KEY,
+          title TEXT NOT NULL,
+          createdDate INTEGER NOT NULL,
+          lastMessageDate INTEGER NOT NULL
+        )
+      ''');
+      await db.execute('''
+        CREATE TABLE chat_messages (
+          id TEXT PRIMARY KEY,
+          sessionId TEXT NOT NULL,
+          role TEXT NOT NULL,
+          text TEXT,
+          imagePath TEXT,
+          clothingIds TEXT,
+          timestamp INTEGER NOT NULL,
+          FOREIGN KEY (sessionId) REFERENCES chat_sessions(id)
+        )
+      ''');
     }
   }
 
@@ -112,6 +134,28 @@ class DatabaseHelper {
         content TEXT,
         extra TEXT,
         created_at $integerType
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE chat_sessions (
+        id TEXT PRIMARY KEY,
+        title TEXT NOT NULL,
+        createdDate INTEGER NOT NULL,
+        lastMessageDate INTEGER NOT NULL
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE chat_messages (
+        id TEXT PRIMARY KEY,
+        sessionId TEXT NOT NULL,
+        role TEXT NOT NULL,
+        text TEXT,
+        imagePath TEXT,
+        clothingIds TEXT,
+        timestamp INTEGER NOT NULL,
+        FOREIGN KEY (sessionId) REFERENCES chat_sessions(id)
       )
     ''');
   }
@@ -255,6 +299,65 @@ class DatabaseHelper {
       orderBy: 'created_at DESC',
     );
     return result.map((map) => OperationLog.fromMap(map)).toList();
+  }
+
+  // ========== AI 对话 ==========
+
+  Future<String> createChatSession(String id, String title) async {
+    final db = await database;
+    await db.insert('chat_sessions', {
+      'id': id,
+      'title': title,
+      'createdDate': DateTime.now().millisecondsSinceEpoch,
+      'lastMessageDate': DateTime.now().millisecondsSinceEpoch,
+    });
+    return id;
+  }
+
+  Future<void> updateSessionLastMessage(String sessionId) async {
+    final db = await database;
+    await db.update(
+      'chat_sessions',
+      {'lastMessageDate': DateTime.now().millisecondsSinceEpoch},
+      where: 'id = ?',
+      whereArgs: [sessionId],
+    );
+  }
+
+  Future<void> updateSessionTitle(String sessionId, String title) async {
+    final db = await database;
+    await db.update(
+      'chat_sessions',
+      {'title': title},
+      where: 'id = ?',
+      whereArgs: [sessionId],
+    );
+  }
+
+  Future<List<Map<String, dynamic>>> getChatSessions() async {
+    final db = await database;
+    return await db.query('chat_sessions', orderBy: 'lastMessageDate DESC');
+  }
+
+  Future<void> deleteChatSession(String sessionId) async {
+    final db = await database;
+    await db.delete('chat_messages', where: 'sessionId = ?', whereArgs: [sessionId]);
+    await db.delete('chat_sessions', where: 'id = ?', whereArgs: [sessionId]);
+  }
+
+  Future<void> insertChatMessage(Map<String, dynamic> message) async {
+    final db = await database;
+    await db.insert('chat_messages', message);
+  }
+
+  Future<List<Map<String, dynamic>>> getChatMessages(String sessionId) async {
+    final db = await database;
+    return await db.query(
+      'chat_messages',
+      where: 'sessionId = ?',
+      whereArgs: [sessionId],
+      orderBy: 'timestamp ASC',
+    );
   }
 
   Future<void> close() async {

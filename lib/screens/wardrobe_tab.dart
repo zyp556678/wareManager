@@ -146,6 +146,7 @@ class _WardrobeTabState extends State<WardrobeTab> {
           height: 56,
           padding: const EdgeInsets.symmetric(vertical: 8),
           child: ListView.separated(
+            physics: const ClampingScrollPhysics(),
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 16),
             itemCount: _categories.length,

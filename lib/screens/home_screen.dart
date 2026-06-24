@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../providers/clothing_provider.dart';
+import '../providers/theme_provider.dart';
 import '../providers/weather_provider.dart';
 import '../widgets/glass_card.dart';
 import '../widgets/bento_grid.dart';
@@ -70,9 +71,16 @@ class _HomeScreenState extends State<HomeScreen> {
     final cs = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
+    final tp = context.watch<ThemeProvider>();
+    final bgColor = tp.backgroundEnabled
+        ? cs.surface.withValues(alpha: tp.backgroundOpacity)
+        : null;
+
     return Scaffold(
+      backgroundColor: bgColor,
       body: SafeArea(
         child: SingleChildScrollView(
+          physics: const ClampingScrollPhysics(),
           padding: const EdgeInsets.fromLTRB(16, 20, 16, 100),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -311,6 +319,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 SizedBox(
                                   height: 110,
                                   child: ListView.separated(
+                                    physics: const ClampingScrollPhysics(),
                                     scrollDirection: Axis.horizontal,
                                     itemCount: recentItems.length,
                                     separatorBuilder: (context, index) => const SizedBox(width: 10),

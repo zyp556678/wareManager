@@ -53,6 +53,7 @@ class _OutfitLogTabState extends State<OutfitLogTab> {
         }
 
         return ListView.separated(
+          physics: const ClampingScrollPhysics(),
           padding: const EdgeInsets.fromLTRB(12, 8, 12, 16),
           itemCount: logs.length,
           separatorBuilder: (context, index) => const SizedBox(height: 10),

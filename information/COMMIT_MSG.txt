@@ -1,14 +1,58 @@
-v2.0.0+3 (2026-05-16)
+v2.1.0: AI 搭配助手、自定义背景、悬浮导航栏
 
-Features:
-- 闲置设置流程重构：支持选择闲置开始日期和结束日期
-- 闲置设置支持从地点管理中选择存放地点，支持直接新建地点
-- 识别确认页闲置设置真正保存数据（直接创建闲置状态衣物）
+## AI 搭配助手
+- 集成 flutter_gemma + flutter_gemma_litertlm (Gemma 4 E2B)
+- 支持文字对话、流式输出、停止生成
+- 支持图片理解（需设备 GPU 支持）
+- 衣物引用功能（自动附带衣物照片）
+- 会话管理（新建/历史/删除/自动命名）
+- 模型管理（下载/切换/删除/废文件清理）
+- 上下文窗口可配置（2K/4K/8K/16K tokens）
+- 下载进度显示（速度+剩余时间）
 
-Fixes:
-- 修复衣橱和闲置页面长按删除功能失效的问题（context 被 showModalBottomSheet 遮蔽）
-- 修复识别确认页闲置设置只显示提示但不保存数据的问题
+## 自定义背景
+- 选择照片作为 App 全局背景
+- 透明度滑动条调节（0-100%）
+- 所有主页面统一显示
 
-Chores:
-- 数据库版本升级至 7，新增 idleFrom 字段
-- 新增公共地点选择方法 lib/utils/idle_utils.dart
+## 导航栏优化
+- 改为悬浮定位（不再使用 Scaffold.bottomNavigationBar）
+- 新增胶囊型滑动指示器（300ms 动画）
+- 扩展为 5 个 Tab：首页/衣橱/录入/AI/我的
+
+## 其他改动
+- Flutter SDK 升级到 3.44.3 / Dart 3.12.2
+- 数据库升级到 version=8（新增 chat_sessions、chat_messages 表）
+- 移除未使用的 liquid_glass_easy 依赖
+- 移除无用的 assets/images/ 资源声明
+- 修复消息重复添加导致上下文膨胀的问题
+- 修复导航栏索引映射错误
+- 修复 .task 文件格式识别问题
+
+## 文件变更
+新增:
+- lib/screens/ai_chat_screen.dart
+- lib/screens/model_management_screen.dart
+- lib/services/ai_service.dart
+- lib/services/model_downloader.dart
+- lib/services/ai_context_builder.dart
+- lib/models/chat_message.dart
+- lib/widgets/chat_bubble.dart
+- lib/widgets/model_download_dialog.dart
+- lib/widgets/clothing_card_widget.dart
+- lib/screens/background_picker_screen.dart
+
+修改:
+- lib/main.dart
+- lib/providers/theme_provider.dart
+- lib/screens/settings_page.dart
+- lib/screens/home_screen.dart
+- lib/screens/wardrobe_screen.dart
+- lib/screens/profile_screen.dart
+- lib/widgets/glass_nav_bar.dart
+- lib/services/database_helper.dart
+- pubspec.yaml
+- android/app/src/main/AndroidManifest.xml
+- README.md
+- information/CHANGELOG.md
+- information/PROJECT_STATE.md

@@ -140,6 +140,7 @@ class _IdleTabState extends State<IdleTab> {
         }
 
         return ListView.separated(
+          physics: const ClampingScrollPhysics(),
           padding: const EdgeInsets.fromLTRB(12, 8, 12, 16),
           itemCount: idleItems.length,
           separatorBuilder: (context, index) => const SizedBox(height: 10),

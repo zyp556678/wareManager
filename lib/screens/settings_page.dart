@@ -5,6 +5,7 @@ import 'package:path_provider/path_provider.dart';
 import '../providers/theme_provider.dart';
 import '../widgets/glass_card.dart';
 import 'theme_color_screen.dart';
+import 'background_picker_screen.dart';
 import 'version_info_screen.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -99,6 +100,21 @@ class _SettingsPageState extends State<SettingsPage> {
                         subtitle: Text(_themeModeLabel(themeProvider.themeMode), style: TextStyle(fontSize: 13, color: cs.onSurface.withValues(alpha: 0.5))),
                         trailing: const Icon(Icons.chevron_right, size: 18),
                         onTap: () => _showThemeModePicker(context, themeProvider),
+                      );
+                    },
+                  ),
+                  const Divider(height: 1, indent: 16),
+                  Consumer<ThemeProvider>(
+                    builder: (context, themeProvider, _) {
+                      final subtitle = themeProvider.backgroundPath != null
+                          ? (themeProvider.backgroundEnabled ? '已启用' : '已关闭')
+                          : '未设置';
+                      return ListTile(
+                        leading: Icon(Icons.wallpaper_outlined, color: cs.primary),
+                        title: const Text('自定义背景'),
+                        subtitle: Text(subtitle, style: TextStyle(fontSize: 13, color: cs.onSurface.withValues(alpha: 0.5))),
+                        trailing: const Icon(Icons.chevron_right, size: 18),
+                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BackgroundPickerScreen())),
                       );
                     },
                   ),

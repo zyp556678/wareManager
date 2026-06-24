@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:io';
 import '../providers/clothing_provider.dart';
+import '../providers/theme_provider.dart';
 import '../widgets/glass_card.dart';
 import 'location_management_page.dart';
 import 'settings_page.dart';
@@ -60,10 +61,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final tp = context.watch<ThemeProvider>();
+    final bgColor = tp.backgroundEnabled
+        ? cs.surface.withValues(alpha: tp.backgroundOpacity)
+        : null;
 
     return Scaffold(
+      backgroundColor: bgColor,
       body: SafeArea(
         child: SingleChildScrollView(
+          physics: const ClampingScrollPhysics(),
           padding: const EdgeInsets.fromLTRB(16, 20, 16, 100),
           child: Column(
             children: [

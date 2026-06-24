@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../providers/theme_provider.dart';
 import 'wardrobe_tab.dart';
 import 'idle_tab.dart';
 import 'outfit_log_tab.dart';
@@ -42,7 +44,13 @@ class WardrobeScreenState extends State<WardrobeScreen> with SingleTickerProvide
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final tabs = ['衣橱', '闲置', '日志'];
 
+    final tp = context.watch<ThemeProvider>();
+    final bgColor = tp.backgroundEnabled
+        ? cs.surface.withValues(alpha: tp.backgroundOpacity)
+        : null;
+
     return Scaffold(
+      backgroundColor: bgColor,
       body: SafeArea(
         child: Column(
           children: [
